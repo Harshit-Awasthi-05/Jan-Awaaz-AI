@@ -6,8 +6,9 @@ from app.api.ingestion.media_utils import CloudinaryManager
 from app.core.security import verify_citizen_token
 from app.core.logger import log
 from app.core.ai_service import analyze_citizen_report
+from app.api.complaints.services import create_complaint
 
-router = APIRouter(prefix="/api/v1/ingestion", tags=["Ingestion Layer"])
+router = APIRouter(prefix="/ingestion", tags=["Ingestion Layer"])
 media_manager = CloudinaryManager()
 
 async def process_app_file(app_data: CitizenAppPayload, file_bytes: bytes, filename: str, content_type: str):
@@ -27,19 +28,20 @@ async def process_app_file(app_data: CitizenAppPayload, file_bytes: bytes, filen
     
     log.info(f"AI Extraction Complete: {ai_insights}")
     
-    final_payload = {
-        "citizen_id": app_data.citizen_id,
-        "latitude": app_data.latitude,
-        "longitude": app_data.longitude,
-        "media_url": public_url,
-        "category": ai_insights.get("category"),
-        "severity": ai_insights.get("severity"),
-        "summary": ai_insights.get("summary"),
-        "action_insight": ai_insights.get("actionable_insight"),
-        "status": "logged"
-    }
+    complaint_id = create_complaint(
+        citizen_uid=app_data.citizen_id,
+        channel="app",
+        category=ai_insights.get("category"),
+        severity=ai_insights.get("severity"),
+        summary=ai_insights.get("summary"),
+        action_insight=ai_insights.get("actionable_insight"),
+        media_url=public_url,
+        latitude=app_data.latitude,
+        longitude=app_data.longitude,
+        constituency=app_data.constituency
+    )
     
-    log.info("Ready for BigQuery Insertion.")
+    log.info(f"Complaint saved with ID: {complaint_id}")
 
 async def process_whatsapp_media(payload: WhatsAppWebhookPayload):
     log.info(f"WhatsApp {payload.message_type} received from {payload.from_number}")
@@ -66,14 +68,16 @@ async def app_media_upload(
     latitude: float = Form(...),
     longitude: float = Form(...),
     category: Optional[str] = Form(None),
-    description: Optional[str] = Form(None)
+    description: Optional[str] = Form(None),
+    constituency: Optional[str] = Form("Central District"),
 ):
     app_data = CitizenAppPayload(
         citizen_id=citizen_uid,
         latitude=latitude,
         longitude=longitude,
         category=category,
-        description=description
+        description=description,
+        constituency=constituency
     )
     
     safe_filename = f"{int(time.time())}_{file.filename}"

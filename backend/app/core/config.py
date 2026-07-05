@@ -7,21 +7,26 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Jan Awaaz Ai"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    
+
     GEMINI_API_KEY: str
     GOOGLE_APPLICATION_CREDENTIALS: str
     NGROK_AUTHTOKEN: str
-    
-    SECRET_KEY: str = "super_secret_hackathon_key_change_in_production"
+
+    # No default here on purpose: the app must fail to start rather than
+    # silently sign JWTs with a publicly-known key from GitHub history.
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
-    
-    
+
     GCP_PROJECT_ID: str = ""
     FIREBASE_PROJECT_ID: str = "jan-awaaz-ai-authentication"
     PUBSUB_TOPIC_ID: str = ""
     GCS_BUCKET_NAME: str = ""
-    
+
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("ALLOWED_HOSTS", mode="before")
@@ -34,8 +39,8 @@ class Settings(BaseSettings):
         return v
 
     model_config = SettingsConfigDict(
-        env_file=".env", 
-        env_file_encoding="utf-8", 
+        env_file=".env",
+        env_file_encoding="utf-8",
         extra="ignore"
     )
 

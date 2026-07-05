@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logger import log
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 def analyze_citizen_report(text_content: str = None, file_bytes: bytes = None) -> dict:
     prompt = """

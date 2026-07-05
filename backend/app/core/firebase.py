@@ -1,22 +1,13 @@
-import firebase_admin
-import os
-import sys
-from dotenv import load_dotenv
+from firebase_admin import auth
+from app.core.logger import log
 
 
-load_dotenv()
-
-def init_firebase():
-    cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    
-    if not cred_path:
-        print("ERROR: GOOGLE_APPLICATION_CREDENTIALS .env me nahi mila!")
-        sys.exit(1)
-
-    if not firebase_admin._apps:
-        try:
-            firebase_admin.initialize_app()
-            print("Firebase successfully initialized using .env credentials!")
-        except Exception as e:
-            print(f"ERROR initializing Firebase: {e}")
-            sys.exit(1)
+def get_or_create_citizen_uid(phone_number: str) -> str:
+   
+    try:
+        user = auth.get_user_by_phone_number(phone_number)
+        return user.uid
+    except auth.UserNotFoundError:
+        user = auth.create_user(phone_number=phone_number)
+        log.info(f"Created new Firebase user for {phone_number}: {user.uid}")
+        return user.uid

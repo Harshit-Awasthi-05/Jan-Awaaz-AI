@@ -25,3 +25,4 @@ class CitizenAppPayload(BaseModel):
     longitude: float
     category: Optional[str] = None
     description: Optional[str] = None
+    constituency: Optional[str] = "Central District" 
