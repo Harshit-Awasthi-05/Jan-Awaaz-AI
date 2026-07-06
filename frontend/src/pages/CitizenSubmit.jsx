@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import SparkleIcon from '../components/SparkleIcon';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 const categories = [
@@ -26,6 +27,7 @@ const categories = [
 
 export default function CitizenSubmit() {
   const { citizenToken } = useAuth();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -68,11 +70,11 @@ export default function CitizenSubmit() {
     setSubmitError('');
 
     if (!photoFile) {
-      setSubmitError('Please attach a photo of the issue.');
+      setSubmitError(t('submit_error_photo'));
       return;
     }
     if (!location) {
-      setSubmitError('Please detect your location before submitting.');
+      setSubmitError(t('submit_error_location'));
       return;
     }
 
@@ -84,6 +86,7 @@ export default function CitizenSubmit() {
       formData.append('longitude', location.longitude);
       if (category) formData.append('category', category);
       if (description) formData.append('description', description);
+      formData.append('language', language);
 
       const res = await fetch(`${API_BASE}/ingestion/app-upload`, {
         method: 'POST',
@@ -91,7 +94,7 @@ export default function CitizenSubmit() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error('Failed to submit your report. Please try again.');
+      if (!res.ok) throw new Error(t('submit_error_generic'));
 
       setSubmitSuccess(true);
       setTimeout(() => navigate('/'), 1800);
@@ -106,9 +109,9 @@ export default function CitizenSubmit() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <CheckCircle2 className="w-14 h-14 text-[#22C55E] mb-4" />
-        <h2 className="text-lg font-bold text-[#0F172A]">Report Submitted</h2>
+        <h2 className="text-lg font-bold text-[#0F172A]">{t('submit_success_title')}</h2>
         <p className="text-sm text-[#64748B] mt-1">
-          Our AI is analyzing your report. Redirecting you home...
+          {t('submit_success_subtitle')}
         </p>
       </div>
     );
@@ -117,9 +120,9 @@ export default function CitizenSubmit() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">Submit Grievance</h1>
+        <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">{t('submit_title')}</h1>
         <p className="text-xs text-[#64748B] mt-0.5">
-          Describe your issue and we'll route it to the right department.
+          {t('submit_subtitle')}
         </p>
       </div>
 
@@ -136,7 +139,7 @@ export default function CitizenSubmit() {
         {/* Category */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
-            Category (optional — AI will categorize automatically)
+            {t('submit_category_label')}
           </label>
           <div className="relative">
             <select
@@ -144,7 +147,7 @@ export default function CitizenSubmit() {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A] appearance-none cursor-pointer"
             >
-              <option value="">Let AI decide</option>
+              <option value="">{t('submit_category_auto')}</option>
               {categories.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -158,15 +161,15 @@ export default function CitizenSubmit() {
         {/* Description */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
-            Description
+            {t('submit_description_label')}
             <span className="ml-1.5 inline-flex items-center gap-0.5 text-[#14B8A6]">
-              <SparkleIcon className="w-3 h-3 inline" /> AI-Enhanced
+              <SparkleIcon className="w-3 h-3 inline" /> {t('submit_ai_enhanced')}
             </span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add any extra detail. Our AI will also analyze your photo directly."
+            placeholder={t('submit_description_placeholder')}
             rows={4}
             className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#14B8A6]/30 text-[#0F172A] placeholder:text-[#CBD5E1] resize-none"
           />
@@ -175,7 +178,7 @@ export default function CitizenSubmit() {
         {/* Location */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
-            Location <span className="text-red-500">*</span>
+            {t('submit_location_label')} <span className="text-red-500">*</span>
           </label>
           <button
             type="button"
@@ -190,11 +193,11 @@ export default function CitizenSubmit() {
           >
             <MapPin className="w-4 h-4 text-[#2563EB]" />
             <span>
-              {locationStatus === 'detecting' && 'Detecting your location...'}
+              {locationStatus === 'detecting' && t('submit_location_detecting')}
               {locationStatus === 'done' &&
-                `Location detected (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`}
-              {locationStatus === 'error' && 'Could not detect location — tap to retry'}
-              {locationStatus === 'idle' && 'Tap to detect your location'}
+                `${t('submit_location_detected')} (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`}
+              {locationStatus === 'error' && t('submit_location_error')}
+              {locationStatus === 'idle' && t('submit_location_idle')}
             </span>
           </button>
         </div>
@@ -202,7 +205,7 @@ export default function CitizenSubmit() {
         {/* Attachments */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
-            Attach Photo <span className="text-red-500">*</span>
+            {t('submit_photo_label')} <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-3">
             <input
@@ -223,7 +226,7 @@ export default function CitizenSubmit() {
               }`}
             >
               <Camera className="w-4 h-4" />
-              {photoFile ? photoFile.name.slice(0, 20) : 'Photo'}
+              {photoFile ? photoFile.name.slice(0, 20) : t('submit_photo_button')}
             </button>
             <button
               type="button"
@@ -232,7 +235,7 @@ export default function CitizenSubmit() {
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm bg-[#F8FAFC] rounded-2xl border border-dashed border-[#E2E8F0] text-[#CBD5E1] cursor-not-allowed"
             >
               <Mic className="w-4 h-4" />
-              Voice Note (soon)
+              {t('submit_voice_soon')}
             </button>
           </div>
         </div>
@@ -244,7 +247,7 @@ export default function CitizenSubmit() {
           className="w-full flex items-center justify-center gap-2 bg-[#2563EB] text-white text-sm font-semibold px-4 py-3.5 rounded-2xl hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20 active:scale-[0.98] disabled:opacity-50"
         >
           <Send className="w-4 h-4" />
-          {submitting ? 'Submitting...' : 'Submit Grievance'}
+          {submitting ? t('submit_submitting') : t('submit_button')}
         </button>
       </form>
     </div>

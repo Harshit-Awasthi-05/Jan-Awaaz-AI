@@ -26,3 +26,4 @@ class CitizenAppPayload(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     constituency: Optional[str] = "Central District" 
+    language: Optional[str] = "en"

@@ -23,7 +23,8 @@ async def process_app_file(app_data: CitizenAppPayload, file_bytes: bytes, filen
     log.info("Triggering Gemini AI Analysis...")
     ai_insights = analyze_citizen_report(
         text_content=app_data.description, 
-        file_bytes=file_bytes
+        file_bytes=file_bytes,
+        language=app_data.language
     )
     
     log.info(f"AI Extraction Complete: {ai_insights}")
@@ -70,6 +71,7 @@ async def app_media_upload(
     category: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     constituency: Optional[str] = Form("Central District"),
+    language: Optional[str] = Form("en"),
 ):
     app_data = CitizenAppPayload(
         citizen_id=citizen_uid,
@@ -77,7 +79,8 @@ async def app_media_upload(
         longitude=longitude,
         category=category,
         description=description,
-        constituency=constituency
+        constituency=constituency,
+        language=language,
     )
     
     safe_filename = f"{int(time.time())}_{file.filename}"

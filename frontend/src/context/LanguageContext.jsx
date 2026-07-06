@@ -11,7 +11,7 @@ const translations = {
   nav_updates: { en: "Updates", hi: "अपडेट" },
   nav_profile: { en: "Profile", hi: "प्रोफाइल" },
 
-  // CitizenLogin
+  
   login_title: { en: "Jan Awaaz AI", hi: "जन आवाज़ AI" },
   login_subtitle: { en: "Sign in to report an issue", hi: "समस्या दर्ज करने के लिए साइन इन करें" },
   login_name_label: { en: "Your Name", hi: "आपका नाम" },
@@ -24,7 +24,7 @@ const translations = {
   login_verify: { en: "Verify & Continue", hi: "सत्यापित करें और जारी रखें" },
   login_verifying: { en: "Verifying...", hi: "सत्यापित हो रहा है..." },
 
-  // CitizenHome
+
   home_good_morning: { en: "Good Morning", hi: "सुप्रभात" },
   home_good_afternoon: { en: "Good Afternoon", hi: "नमस्कार" },
   home_good_evening: { en: "Good Evening", hi: "शुभ संध्या" },
@@ -51,7 +51,7 @@ const translations = {
   home_uncategorized: { en: "Uncategorized", hi: "अवर्गीकृत" },
   home_your_constituency: { en: "Your Constituency", hi: "आपका निर्वाचन क्षेत्र" },
 
-  // CitizenSubmit
+
   submit_title: { en: "Submit Grievance", hi: "शिकायत दर्ज करें" },
   submit_subtitle: {
     en: "Describe your issue and we'll route it to the right department.",
@@ -82,7 +82,9 @@ const translations = {
   submit_success_subtitle: {
     en: "Our AI is analyzing your report. Redirecting you home...",
     hi: "हमारा AI आपकी रिपोर्ट का विश्लेषण कर रहा है। आपको होम पर भेजा जा रहा है...",
-  },
+  },submit_error_photo: { en: "Please attach a photo of the issue.", hi: "कृपया समस्या की एक फोटो जोड़ें।" },
+  submit_error_location: { en: "Please detect your location before submitting.", hi: "कृपया सबमिट करने से पहले अपना स्थान पता करें।" },
+  submit_error_generic: { en: "Failed to submit your report. Please try again.", hi: "आपकी रिपोर्ट भेजने में विफल। कृपया पुनः प्रयास करें।" },
 };
 
 export function LanguageProvider({ children }) {
