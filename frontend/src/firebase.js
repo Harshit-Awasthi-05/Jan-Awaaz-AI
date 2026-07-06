@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyApzrPWOlIIMwcL8zZSXbhAaCtdf_N61n0",
-  authDomain: "jan-awaaz-ai.firebaseapp.com",
-  projectId: "jan-awaaz-ai",
-  storageBucket: "jan-awaaz-ai.firebasestorage.app",
-  messagingSenderId: "198000804257",
-  appId: "1:198000804257:web:1ee1d174a439c205490be0",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
