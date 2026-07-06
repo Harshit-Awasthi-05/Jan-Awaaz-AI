@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Camera,
   Mic,
   MapPin,
   Send,
   ChevronDown,
+  CheckCircle2,
+  X,
 } from 'lucide-react';
 import SparkleIcon from '../components/SparkleIcon';
+import { useAuth } from '../context/AuthContext';
+
+const API_BASE = 'http://127.0.0.1:8000/api/v1';
 
 const categories = [
   'Water Supply',
@@ -20,47 +26,137 @@ const categories = [
 ];
 
 export default function CitizenSubmit() {
+  const { citizenToken } = useAuth();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [location, setLocation] = useState(null); // { latitude, longitude }
+  const [locationStatus, setLocationStatus] = useState('idle'); // idle | detecting | done | error
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('error');
+      return;
+    }
+    setLocationStatus('detecting');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setLocationStatus('done');
+      },
+      () => setLocationStatus('error'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setPhotoFile(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError('');
+
+    if (!photoFile) {
+      setSubmitError('Please attach a photo of the issue.');
+      return;
+    }
+    if (!location) {
+      setSubmitError('Please detect your location before submitting.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', photoFile);
+      formData.append('latitude', location.latitude);
+      formData.append('longitude', location.longitude);
+      if (category) formData.append('category', category);
+      if (description) formData.append('description', description);
+
+      const res = await fetch(`${API_BASE}/ingestion/app-upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${citizenToken}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Failed to submit your report. Please try again.');
+
+      setSubmitSuccess(true);
+      setTimeout(() => navigate('/'), 1800);
+    } catch (err) {
+      setSubmitError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <CheckCircle2 className="w-14 h-14 text-[#22C55E] mb-4" />
+        <h2 className="text-lg font-bold text-[#0F172A]">Report Submitted</h2>
+        <p className="text-sm text-[#64748B] mt-1">
+          Our AI is analyzing your report. Redirecting you home...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">Submit Grievance</h1>
-        <p className="text-xs text-[#64748B] mt-0.5">Describe your issue and we'll route it to the right department.</p>
+        <p className="text-xs text-[#64748B] mt-0.5">
+          Describe your issue and we'll route it to the right department.
+        </p>
       </div>
 
-      {/* Form */}
-      <div className="space-y-4">
-        {/* Subject */}
-        <div>
-          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">Subject</label>
-          <input
-            type="text"
-            placeholder="Brief description of the issue"
-            className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A] placeholder:text-[#CBD5E1]"
-          />
+      {submitError && (
+        <div className="flex items-start justify-between gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+          <span>{submitError}</span>
+          <button onClick={() => setSubmitError('')}>
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Category */}
         <div>
-          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">Category</label>
+          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
+            Category (optional — AI will categorize automatically)
+          </label>
           <div className="relative">
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A] appearance-none cursor-pointer"
             >
-              <option value="" disabled>Select a category</option>
+              <option value="">Let AI decide</option>
               {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" />
           </div>
         </div>
 
-        {/* Description – AI-enhanced */}
+        {/* Description */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
             Description
@@ -68,47 +164,90 @@ export default function CitizenSubmit() {
               <SparkleIcon className="w-3 h-3 inline" /> AI-Enhanced
             </span>
           </label>
-          <div className="relative ai-border-rounded rounded-2xl">
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your issue in detail. Our AI will help structure it..."
-              rows={5}
-              className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-transparent outline-none focus:ring-2 focus:ring-[#14B8A6]/30 text-[#0F172A] placeholder:text-[#CBD5E1] resize-none"
-            />
-          </div>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add any extra detail. Our AI will also analyze your photo directly."
+            rows={4}
+            className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#14B8A6]/30 text-[#0F172A] placeholder:text-[#CBD5E1] resize-none"
+          />
         </div>
 
         {/* Location */}
         <div>
-          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">Location</label>
-          <button className="w-full flex items-center gap-2 px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] text-[#94A3B8] hover:border-[#2563EB] transition-colors">
+          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
+            Location <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            onClick={handleDetectLocation}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm bg-white rounded-2xl border transition-colors ${
+              locationStatus === 'done'
+                ? 'border-[#22C55E] text-[#16A34A]'
+                : locationStatus === 'error'
+                ? 'border-red-300 text-red-500'
+                : 'border-[#E2E8F0] text-[#94A3B8] hover:border-[#2563EB]'
+            }`}
+          >
             <MapPin className="w-4 h-4 text-[#2563EB]" />
-            <span>Tap to detect your location</span>
+            <span>
+              {locationStatus === 'detecting' && 'Detecting your location...'}
+              {locationStatus === 'done' &&
+                `Location detected (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`}
+              {locationStatus === 'error' && 'Could not detect location — tap to retry'}
+              {locationStatus === 'idle' && 'Tap to detect your location'}
+            </span>
           </button>
         </div>
 
         {/* Attachments */}
         <div>
-          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">Attachments</label>
+          <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
+            Attach Photo <span className="text-red-500">*</span>
+          </label>
           <div className="flex gap-3">
-            <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm bg-white rounded-2xl border border-dashed border-[#CBD5E1] text-[#64748B] hover:border-[#2563EB] hover:text-[#2563EB] transition-colors">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm bg-white rounded-2xl border border-dashed transition-colors ${
+                photoFile
+                  ? 'border-[#22C55E] text-[#16A34A]'
+                  : 'border-[#CBD5E1] text-[#64748B] hover:border-[#2563EB] hover:text-[#2563EB]'
+              }`}
+            >
               <Camera className="w-4 h-4" />
-              Photo
+              {photoFile ? photoFile.name.slice(0, 20) : 'Photo'}
             </button>
-            <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm bg-white rounded-2xl border border-dashed border-[#CBD5E1] text-[#64748B] hover:border-[#14B8A6] hover:text-[#14B8A6] transition-colors">
+            <button
+              type="button"
+              disabled
+              title="Voice notes are coming soon"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm bg-[#F8FAFC] rounded-2xl border border-dashed border-[#E2E8F0] text-[#CBD5E1] cursor-not-allowed"
+            >
               <Mic className="w-4 h-4" />
-              Voice Note
+              Voice Note (soon)
             </button>
           </div>
         </div>
 
         {/* Submit */}
-        <button className="w-full flex items-center justify-center gap-2 bg-[#2563EB] text-white text-sm font-semibold px-4 py-3.5 rounded-2xl hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20 active:scale-[0.98]">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full flex items-center justify-center gap-2 bg-[#2563EB] text-white text-sm font-semibold px-4 py-3.5 rounded-2xl hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20 active:scale-[0.98] disabled:opacity-50"
+        >
           <Send className="w-4 h-4" />
-          Submit Grievance
+          {submitting ? 'Submitting...' : 'Submit Grievance'}
         </button>
-      </div>
+      </form>
     </div>
   );
 }

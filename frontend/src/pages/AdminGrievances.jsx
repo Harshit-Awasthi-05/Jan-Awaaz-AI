@@ -1,20 +1,79 @@
-import { MessageSquare, Search, Filter, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, ChevronDown } from 'lucide-react';
 import GrievanceTable from '../components/GrievanceTable';
+import { useAuth } from '../context/AuthContext';
 
-const grievances = [
-  { id: '2847', subject: 'Water supply disruption in Sector 15', citizen: 'Rahul Kumar', category: 'Water Supply', status: 'processing', priority: 'High', date: 'Jul 4, 2026' },
-  { id: '2846', subject: 'Broken footpath near Central Market', citizen: 'Anjali Sharma', category: 'Infrastructure', status: 'assigned', priority: 'Medium', date: 'Jul 4, 2026' },
-  { id: '2845', subject: 'Noise pollution from construction site', citizen: 'Vikram Singh', category: 'Environment', status: 'pending', priority: 'Low', date: 'Jul 3, 2026' },
-  { id: '2844', subject: 'Request for street light installation', citizen: 'Priya Patel', category: 'Infrastructure', status: 'verified', priority: 'Medium', date: 'Jul 3, 2026' },
-  { id: '2843', subject: 'Sewage overflow on Ring Road', citizen: 'Suresh Yadav', category: 'Sanitation', status: 'resolved', priority: 'High', date: 'Jul 2, 2026' },
-  { id: '2842', subject: 'Unauthorized parking in residential area', citizen: 'Meena Gupta', category: 'Traffic', status: 'rejected', priority: 'Low', date: 'Jul 2, 2026' },
-  { id: '2841', subject: 'Delayed pension disbursement', citizen: 'Ram Prasad', category: 'Welfare', status: 'processing', priority: 'High', date: 'Jul 1, 2026' },
-  { id: '2840', subject: 'Stray dog menace near school', citizen: 'Anita Devi', category: 'Safety', status: 'assigned', priority: 'Medium', date: 'Jul 1, 2026' },
-  { id: '2839', subject: 'Blocked drainage in Block D', citizen: 'Mohammad Ali', category: 'Sanitation', status: 'pending', priority: 'High', date: 'Jun 30, 2026' },
-  { id: '2838', subject: 'Public park maintenance required', citizen: 'Sunita Verma', category: 'Infrastructure', status: 'resolved', priority: 'Low', date: 'Jun 30, 2026' },
-];
+const API_BASE = 'http://127.0.0.1:8000/api/v1';
+
+function formatDate(isoString) {
+  if (!isoString) return '';
+  return new Date(isoString).toLocaleDateString('en-IN', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 export default function AdminGrievances() {
+  const { mpToken } = useAuth();
+  const [grievances, setGrievances] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!mpToken) return;
+    fetchComplaints();
+  }, [mpToken]);
+
+  async function fetchComplaints() {
+    try {
+      const res = await fetch(`${API_BASE}/mp/dashboard/complaints`, {
+        headers: { Authorization: `Bearer ${mpToken}` },
+      });
+      if (!res.ok) throw new Error('Failed to load complaints.');
+      const data = await res.json();
+
+      const mapped = (data.complaints || []).map((c) => ({
+        id: c.complaint_id,
+        subject: c.summary || 'No description available',
+        citizen: c.citizen_name || 'Unknown Citizen',
+        category: c.category || 'Uncategorized',
+        status: c.status || 'submitted',
+        priority: c.severity || 'Low',
+        date: formatDate(c.created_at),
+      }));
+
+      setGrievances(mapped);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleStatusChange(complaintId, newStatus) {
+    
+    setGrievances((prev) =>
+      prev.map((g) => (g.id === complaintId ? { ...g, status: newStatus } : g))
+    );
+
+    try {
+      const res = await fetch(`${API_BASE}/mp/complaints/${complaintId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${mpToken}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update status.');
+    } catch (err) {
+      setError(err.message);
+
+      fetchComplaints();
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between animate-fade-in-up">
@@ -24,7 +83,7 @@ export default function AdminGrievances() {
         </div>
       </div>
 
-      {/* Filters */}
+
       <div className="flex items-center gap-3 animate-fade-in-up">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
@@ -36,14 +95,29 @@ export default function AdminGrievances() {
         </div>
         <div className="flex items-center gap-2">
           {['All Status', 'Category', 'Priority'].map((f) => (
-            <button key={f} className="flex items-center gap-1.5 px-3 py-2.5 text-sm bg-white rounded-lg border border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] transition-colors">
+            <button
+              key={f}
+              className="flex items-center gap-1.5 px-3 py-2.5 text-sm bg-white rounded-lg border border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] transition-colors"
+            >
               {f} <ChevronDown className="w-3.5 h-3.5" />
             </button>
           ))}
         </div>
       </div>
 
-      <GrievanceTable grievances={grievances} />
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+          {error}
+        </p>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-[#64748B]">Loading grievances...</p>
+      ) : grievances.length === 0 ? (
+        <p className="text-sm text-[#94A3B8]">No grievances filed yet.</p>
+      ) : (
+        <GrievanceTable grievances={grievances} onStatusChange={handleStatusChange} />
+      )}
     </div>
   );
 }

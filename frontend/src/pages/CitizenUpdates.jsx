@@ -1,88 +1,123 @@
-import { Bell, Check, Clock, Info, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, Clock, Info } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-const notifications = [
-  {
-    id: 1,
-    title: 'Grievance #2847 Update',
-    message: 'Your water supply complaint has been assigned to the Jal Board department.',
-    time: '2 hours ago',
-    type: 'info',
-    read: false,
-  },
-  {
-    id: 2,
-    title: 'Grievance #2819 Resolved',
-    message: 'Your sanitation complaint has been resolved. Please confirm if the issue is fixed.',
-    time: '1 day ago',
-    type: 'success',
-    read: false,
-  },
-  {
-    id: 3,
-    title: 'Community Meeting',
-    message: 'MP office is holding a community meeting on July 10th at Community Hall, Sector 15.',
-    time: '2 days ago',
-    type: 'notice',
-    read: true,
-  },
-  {
-    id: 4,
-    title: 'Scheduled Maintenance',
-    message: 'Water supply will be interrupted on July 6th (10AM-4PM) for pipeline maintenance.',
-    time: '3 days ago',
-    type: 'warning',
-    read: true,
-  },
-];
+const API_BASE = 'http://127.0.0.1:8000/api/v1';
 
-const iconMap = {
-  info: { Icon: Info, color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
-  success: { Icon: Check, color: '#22C55E', bg: 'rgba(34,197,94,0.08)' },
-  notice: { Icon: Bell, color: '#14B8A6', bg: 'rgba(20,184,166,0.08)' },
-  warning: { Icon: AlertTriangle, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
-};
+function formatRelativeTime(isoString) {
+  if (!isoString) return '';
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+}
+
+// Each complaint becomes a real "update" reflecting its actual current status —
+// no fake notifications, just an activity view built from real backend data.
+function buildUpdateFromComplaint(c) {
+  if (c.status === 'resolved') {
+    return {
+      title: `Grievance #${c.complaint_id} Resolved`,
+      message: `Your ${c.category || 'reported'} issue has been marked resolved.`,
+      Icon: Check,
+      color: '#22C55E',
+      bg: 'rgba(34,197,94,0.08)',
+    };
+  }
+  if (c.status === 'in_progress') {
+    return {
+      title: `Grievance #${c.complaint_id} In Progress`,
+      message: `Your ${c.category || 'reported'} issue is being worked on.`,
+      Icon: Clock,
+      color: '#F59E0B',
+      bg: 'rgba(245,158,11,0.08)',
+    };
+  }
+  return {
+    title: `Grievance #${c.complaint_id} Submitted`,
+    message: c.summary || 'Your report has been received and is under review.',
+    Icon: Info,
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.08)',
+  };
+}
 
 export default function CitizenUpdates() {
+  const { citizenToken } = useAuth();
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!citizenToken) return;
+
+    async function fetchComplaints() {
+      try {
+        const res = await fetch(`${API_BASE}/citizen/complaints`, {
+          headers: { Authorization: `Bearer ${citizenToken}` },
+        });
+        if (!res.ok) throw new Error('Failed to load updates.');
+        const data = await res.json();
+        setComplaints(data.complaints || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchComplaints();
+  }, [citizenToken]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">Updates</h1>
-        <button className="text-xs font-medium text-[#2563EB]">Mark all read</button>
       </div>
 
-      <div className="space-y-2.5 stagger-children">
-        {notifications.map((n) => {
-          const { Icon, color, bg } = iconMap[n.type];
-          return (
-            <div
-              key={n.id}
-              className={`bg-white rounded-2xl p-4 shadow-card transition-all cursor-pointer animate-fade-in-up ${
-                !n.read ? 'border-l-[3px]' : ''
-              }`}
-              style={!n.read ? { borderLeftColor: color } : {}}
-            >
-              <div className="flex gap-3">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="w-4 h-4" style={{ color }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-[#0F172A] truncate">{n.title}</p>
-                    {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />}
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+          {error}
+        </p>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-[#64748B]">Loading...</p>
+      ) : complaints.length === 0 ? (
+        <p className="text-sm text-[#94A3B8]">
+          No updates yet — submit a grievance to see status updates here.
+        </p>
+      ) : (
+        <div className="space-y-2.5 stagger-children">
+          {complaints.map((c) => {
+            const { title, message, Icon, color, bg } = buildUpdateFromComplaint(c);
+            return (
+              <div
+                key={c.complaint_id}
+                className="bg-white rounded-2xl p-4 shadow-card transition-all animate-fade-in-up"
+              >
+                <div className="flex gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: bg }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color }} />
                   </div>
-                  <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{n.message}</p>
-                  <p className="text-[10px] text-[#94A3B8] mt-1.5 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {n.time}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#0F172A] truncate">{title}</p>
+                    <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{message}</p>
+                    <p className="text-[10px] text-[#94A3B8] mt-1.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {formatRelativeTime(c.created_at)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

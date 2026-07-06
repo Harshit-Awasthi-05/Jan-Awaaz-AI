@@ -12,8 +12,7 @@ class Settings(BaseSettings):
     GOOGLE_APPLICATION_CREDENTIALS: str
     NGROK_AUTHTOKEN: str
 
-    # No default here on purpose: the app must fail to start rather than
-    # silently sign JWTs with a publicly-known key from GitHub history.
+   
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120

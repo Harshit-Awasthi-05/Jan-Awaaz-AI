@@ -16,15 +16,9 @@ def create_complaint(
     media_url: Optional[str],
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
-    constituency: Optional[str] = "Central District",  # hardcoded for now, see note below
+    constituency: Optional[str] = "Central District",  
 ) -> str:
-    """
-    Writes one complaint to both Firestore (operational: citizen-facing
-    "my complaints" screen) and BigQuery (analytical: MP priority ranking,
-    joins against demographic data). Firestore write is authoritative;
-    if the BigQuery insert fails, we log it but don't fail the request,
-    since the citizen's report is still safely saved.
-    """
+    
     db = get_db()
     complaint_id = str(uuid.uuid4())[:8]
     created_at = datetime.now(timezone.utc)

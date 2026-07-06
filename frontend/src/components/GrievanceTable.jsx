@@ -1,7 +1,8 @@
 import StatusChip from './StatusChip';
-import { Eye, MoreHorizontal } from 'lucide-react';
 
-export default function GrievanceTable({ grievances }) {
+const STATUS_OPTIONS = ['submitted', 'in_progress', 'resolved'];
+
+export default function GrievanceTable({ grievances, onStatusChange }) {
   return (
     <div className="bg-white rounded-2xl shadow-card overflow-hidden animate-fade-in-up">
       <div className="overflow-x-auto">
@@ -27,7 +28,7 @@ export default function GrievanceTable({ grievances }) {
                 Date
               </th>
               <th className="text-right py-3 px-4 text-xs font-semibold text-[#64748B] tracking-wider uppercase">
-                Actions
+                Update Status
               </th>
             </tr>
           </thead>
@@ -35,7 +36,7 @@ export default function GrievanceTable({ grievances }) {
             {grievances.map((g, i) => (
               <tr
                 key={g.id}
-                className="border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F1F5F9] transition-colors duration-100 cursor-pointer"
+                className="border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F1F5F9] transition-colors duration-100"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
                 <td className="py-2 px-4 text-sm font-mono text-[#64748B]">
@@ -58,7 +59,7 @@ export default function GrievanceTable({ grievances }) {
                 <td className="py-2 px-4">
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${
-                      g.priority === 'High'
+                      g.priority === 'High' || g.priority === 'Critical'
                         ? 'text-[#EF4444] bg-[rgba(239,68,68,0.08)]'
                         : g.priority === 'Medium'
                         ? 'text-[#F59E0B] bg-[rgba(245,158,11,0.08)]'
@@ -70,14 +71,17 @@ export default function GrievanceTable({ grievances }) {
                 </td>
                 <td className="py-2 px-4 text-sm text-[#64748B]">{g.date}</td>
                 <td className="py-2 px-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button className="p-1.5 rounded-lg hover:bg-[#F1F5F9] text-[#94A3B8] hover:text-[#2563EB] transition-colors">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-lg hover:bg-[#F1F5F9] text-[#94A3B8] hover:text-[#475569] transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <select
+                    value={g.status}
+                    onChange={(e) => onStatusChange && onStatusChange(g.id, e.target.value)}
+                    className="text-xs font-medium text-[#0F172A] bg-white border border-[#E2E8F0] rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#2563EB]/30 cursor-pointer"
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt.replace('_', ' ')}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               </tr>
             ))}

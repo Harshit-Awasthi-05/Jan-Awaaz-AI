@@ -12,7 +12,7 @@ security_scheme = HTTPBearer()
 OTP_TTL_MINUTES = 5
 OTP_MAX_ATTEMPTS = 5
 
-# otp_storage[email] = {"otp": "123456", "expires_at": datetime, "attempts": 0}
+
 otp_storage: dict = {}
 
 
@@ -87,11 +87,7 @@ async def verify_citizen_token(
 async def get_current_mp(
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
 ) -> dict:
-    """
-    Decodes and verifies the JWT issued by /mp/verify-otp.
-    Use this as a Depends() on any route that should be MP-only
-    (e.g. viewing constituency complaint dashboards).
-    """
+    
     token = credentials.credentials
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
