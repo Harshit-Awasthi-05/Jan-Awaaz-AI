@@ -20,7 +20,7 @@ import GrievanceTable from '../components/GrievanceTable';
 import SparkleIcon from '../components/SparkleIcon';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 const CustomBarShape = (props) => {
   const { x, y, width, height, fill } = props;

@@ -1,8 +1,11 @@
 import { Outlet } from 'react-router-dom';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SparkleIcon from '../components/SparkleIcon';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CitizenLayout() {
+  const { language, toggleLanguage } = useLanguage();
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 max-w-md mx-auto relative">
       {/* Mobile Top Bar */}
@@ -14,8 +17,17 @@ export default function CitizenLayout() {
               JanAwaaz<span className="text-[#14B8A6]"> AI</span>
             </span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center">
-            <span className="text-xs font-semibold text-[#64748B]">RK</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleLanguage}
+              className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0] transition-colors"
+              title="Switch language"
+            >
+              {language === 'en' ? 'हिं' : 'EN'}
+            </button>
+            <div className="w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center">
+              <span className="text-xs font-semibold text-[#64748B]">RK</span>
+            </div>
           </div>
         </div>
       </header>

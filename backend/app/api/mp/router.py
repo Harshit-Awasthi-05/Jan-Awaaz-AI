@@ -79,6 +79,52 @@ async def list_all_complaints(mp: dict = Depends(get_current_mp)):
     return {"count": len(complaints), "complaints": complaints}
 
 
+@router.get("/dashboard/constituents")
+async def list_constituents(mp: dict = Depends(get_current_mp)):
+    
+    db = get_db()
+    docs = db.collection("complaints").stream()
+
+    by_citizen: dict = {}
+    for doc in docs:
+        data = doc.to_dict()
+        uid = data.get("citizen_uid")
+        if not uid:
+            continue
+
+        created_at = data.get("created_at")
+        entry = by_citizen.setdefault(
+            uid, {"citizen_uid": uid, "grievance_count": 0, "last_active": None}
+        )
+        entry["grievance_count"] += 1
+
+        if created_at and (entry["last_active"] is None or created_at > entry["last_active"]):
+            entry["last_active"] = created_at
+
+    constituents = []
+    for uid, entry in by_citizen.items():
+        try:
+            user = firebase_auth.get_user(uid)
+            name = user.display_name or f"Citizen {uid[:6]}"
+            phone = user.phone_number or "—"
+        except Exception:
+            name = f"Citizen {uid[:6]}"
+            phone = "—"
+
+        last_active = entry["last_active"]
+        constituents.append({
+            "citizen_uid": uid,
+            "name": name,
+            "constituency": mp.get("constituency"),
+            "phone": phone,
+            "grievance_count": entry["grievance_count"],
+            "last_active": last_active.isoformat() if hasattr(last_active, "isoformat") else last_active,
+        })
+
+    constituents.sort(key=lambda c: c["grievance_count"], reverse=True)
+    return {"count": len(constituents), "constituents": constituents}
+
+
 class StatusUpdate(BaseModel):
     status: Literal["submitted", "in_progress", "resolved"]
 
@@ -97,7 +143,7 @@ async def update_complaint_status(
     return {"complaint_id": complaint_id, "status": payload.status}
 
 
-# ── Dashboard overview — all real, computed from actual Firestore data ──
+
 
 def _severity_score(severity: str) -> int:
     return {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}.get(severity, 1)
@@ -105,13 +151,7 @@ def _severity_score(severity: str) -> int:
 
 @router.get("/dashboard/overview")
 async def get_dashboard_overview(mp: dict = Depends(get_current_mp)):
-    """
-    Powers the AdminDashboard landing page. Every number here is computed
-    directly from real Firestore complaint documents — no fabricated
-    historical trends or metrics we don't actually track (e.g. resolution
-    time and satisfaction score are deliberately omitted, since we don't
-    store a resolved_at timestamp or collect citizen feedback yet).
-    """
+
     db = get_db()
     docs = list(db.collection("complaints").stream())
     complaints = [doc.to_dict() for doc in docs]
@@ -165,7 +205,7 @@ async def get_dashboard_overview(mp: dict = Depends(get_current_mp)):
         for d, v in day_buckets.items()
     ]
 
-    # AI Insights — genuinely computed from the data above, not fabricated
+    
     insights = []
     if total == 0:
         insights.append("No reports yet — insights will appear once citizens start filing grievances.")

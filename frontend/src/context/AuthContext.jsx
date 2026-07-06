@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { auth } from "../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onIdTokenChanged, signOut } from "firebase/auth";
 
 const AuthContext = createContext(null);
 
@@ -12,7 +12,12 @@ export function AuthProvider({ children }) {
   const [mpInfo, setMpInfo] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    // onIdTokenChanged fires on sign-in/sign-out AND whenever Firebase
+    // silently refreshes the ID token (tokens expire after 1 hour).
+    // onAuthStateChanged only fires on sign-in/sign-out, which left
+    // citizenToken stale after an hour and caused every citizen API call
+    // to fail with 401 for the rest of the session.
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         const token = await user.getIdToken();
         setCitizenUser(user);

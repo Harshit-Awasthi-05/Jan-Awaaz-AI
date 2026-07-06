@@ -1,16 +1,18 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, PlusCircle, Bell, User } from 'lucide-react';
-
-const navItems = [
-  { to: '/', icon: Home, label: 'Home', end: true },
-  { to: '/track', icon: Search, label: 'Track' },
-  { to: '/submit', icon: PlusCircle, label: 'Submit', isMain: true },
-  { to: '/updates', icon: Bell, label: 'Updates' },
-  { to: '/profile', icon: User, label: 'Profile' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function MobileBottomNav() {
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { to: '/', icon: Home, label: t('nav_home'), end: true },
+    { to: '/track', icon: Search, label: t('nav_track') },
+    { to: '/submit', icon: PlusCircle, label: t('nav_submit'), isMain: true },
+    { to: '/updates', icon: Bell, label: t('nav_updates') },
+    { to: '/profile', icon: User, label: t('nav_profile') },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-[#E2E8F0] z-50 pb-[env(safe-area-inset-bottom)]">

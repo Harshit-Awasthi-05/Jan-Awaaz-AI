@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "../firebase";
+import { useLanguage } from "../context/LanguageContext";
 
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 export default function CitizenLogin() {
   const [name, setName] = useState("");
@@ -13,6 +14,7 @@ export default function CitizenLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const normalizePhone = (raw) => {
     const digitsOnly = raw.replace(/\D/g, "");
@@ -71,9 +73,16 @@ export default function CitizenLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-6">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-        <h1 className="text-lg font-bold text-[#0F172A] mb-1">Jan Awaaz AI</h1>
-        <p className="text-xs text-[#64748B] mb-5">Sign in to report an issue</p>
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm relative">
+        <button
+          onClick={toggleLanguage}
+          className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0] transition-colors"
+          title="Switch language"
+        >
+          {language === 'en' ? 'हिं' : 'EN'}
+        </button>
+        <h1 className="text-lg font-bold text-[#0F172A] mb-1">{t('login_title')}</h1>
+        <p className="text-xs text-[#64748B] mb-5">{t('login_subtitle')}</p>
 
         {error && (
           <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
@@ -85,26 +94,26 @@ export default function CitizenLogin() {
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
-                Your Name
+                {t('login_name_label')}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter Your Name"
+                placeholder={t('login_name_placeholder')}
                 required
                 className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
               />
             </div>
             <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
-                Phone Number
+                {t('login_phone_label')}
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number"
+                placeholder={t('login_phone_placeholder')}
                 required
                 className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
               />
@@ -114,7 +123,7 @@ export default function CitizenLogin() {
               disabled={loading}
               className="w-full bg-[#2563EB] text-white text-sm font-semibold px-4 py-3 rounded-2xl hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
             >
-              {loading ? "Sending..." : "Send OTP"}
+              {loading ? t('login_sending') : t('login_send_otp')}
             </button>
           </form>
         )}
@@ -123,7 +132,7 @@ export default function CitizenLogin() {
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
-                Enter OTP sent to {phone}
+                {t('login_otp_label')} {phone}
               </label>
               <input
                 type="text"
@@ -139,7 +148,7 @@ export default function CitizenLogin() {
               disabled={loading}
               className="w-full bg-[#2563EB] text-white text-sm font-semibold px-4 py-3 rounded-2xl hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
             >
-              {loading ? "Verifying..." : "Verify & Continue"}
+              {loading ? t('login_verifying') : t('login_verify')}
             </button>
           </form>
         )}

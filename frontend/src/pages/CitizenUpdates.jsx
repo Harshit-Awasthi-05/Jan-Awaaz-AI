@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, Clock, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 function formatRelativeTime(isoString) {
   if (!isoString) return '';

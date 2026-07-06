@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import StatusChip from '../components/StatusChip';
 import SparkleIcon from '../components/SparkleIcon';
 import {
@@ -12,14 +13,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
-
-const quickActions = [
-  { icon: FileText, label: 'New Complaint', color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
-  { icon: Clock, label: 'Track Status', color: '#14B8A6', bg: 'rgba(20,184,166,0.08)' },
-  { icon: Phone, label: 'Call Office', color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)' },
-  { icon: MessageCircle, label: 'AI Help', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
-];
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 function formatRelativeTime(isoString) {
   if (!isoString) return '';
@@ -34,16 +28,24 @@ function formatRelativeTime(isoString) {
 
 export default function CitizenHome() {
   const { citizenUser, citizenToken } = useAuth();
+  const { t } = useLanguage();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [greeting] = useState(() => {
+  const [greetingKey] = useState(() => {
     const h = new Date().getHours();
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (h < 12) return 'home_good_morning';
+    if (h < 17) return 'home_good_afternoon';
+    return 'home_good_evening';
   });
+
+  const quickActions = [
+    { icon: FileText, label: t('home_new_complaint'), color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
+    { icon: Clock, label: t('home_track_status'), color: '#14B8A6', bg: 'rgba(20,184,166,0.08)' },
+    { icon: Phone, label: t('home_call_office'), color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)' },
+    { icon: MessageCircle, label: t('home_ai_help'), color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
+  ];
 
   useEffect(() => {
     if (!citizenToken) return;
@@ -78,9 +80,9 @@ export default function CitizenHome() {
     <div className="space-y-5 stagger-children">
       {/* Greeting */}
       <div className="animate-fade-in-up">
-        <p className="text-sm text-[#64748B] font-medium">{greeting}</p>
+        <p className="text-sm text-[#64748B] font-medium">{t(greetingKey)}</p>
         <h1 className="text-xl font-bold text-[#0F172A] tracking-tight mt-0.5">
-          {citizenUser?.displayName || 'Citizen'}
+          {citizenUser?.displayName || t('home_citizen')}
         </h1>
       </div>
 
@@ -89,36 +91,35 @@ export default function CitizenHome() {
         <div className="flex items-center gap-2 mb-3">
           <SparkleIcon className="w-5 h-5" />
           <span className="text-xs font-semibold text-[#14B8A6] tracking-wide uppercase">
-            AI Summary
+            {t('home_ai_summary')}
           </span>
         </div>
         {loading ? (
-          <p className="text-sm text-[#CBD5E1]">Loading your reports...</p>
+          <p className="text-sm text-[#CBD5E1]">{t('home_loading_reports')}</p>
         ) : totalFiled === 0 ? (
           <p className="text-sm text-[#CBD5E1]">
-            You haven't filed any reports yet. Tap{' '}
-            <span className="text-white font-semibold">New Complaint</span> below to get started.
+            {t('home_no_reports')}
           </p>
         ) : (
           <p className="text-sm leading-relaxed text-[#CBD5E1]">
             You have <span className="text-white font-semibold">{inProgressCount} active grievance{inProgressCount !== 1 ? 's' : ''}</span>.
             {mostRecent && (
               <>
-                {' '}Your most recent report ({mostRecent.category || 'Uncategorized'}) is{' '}
+                {' '}Your most recent report ({mostRecent.category || t('home_uncategorized')}) is{' '}
                 <span className="text-[#14B8A6] font-semibold">{mostRecent.status}</span>.
               </>
             )}
           </p>
         )}
         <button className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#14B8A6] hover:text-white transition-colors">
-          View Details <ArrowRight className="w-3.5 h-3.5" />
+          {t('home_view_details')} <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Quick Actions */}
       <div className="animate-fade-in-up">
         <h2 className="text-sm font-semibold text-[#0F172A] mb-3 tracking-tight">
-          Quick Actions
+          {t('home_quick_actions')}
         </h2>
         <div className="grid grid-cols-4 gap-3">
           {quickActions.map((action) => (
@@ -144,15 +145,15 @@ export default function CitizenHome() {
       <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
         <div className="bg-white rounded-2xl p-3 shadow-card text-center">
           <p className="text-lg font-bold text-[#2563EB]">{totalFiled}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">Total Filed</p>
+          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_total_filed')}</p>
         </div>
         <div className="bg-white rounded-2xl p-3 shadow-card text-center">
           <p className="text-lg font-bold text-[#14B8A6]">{inProgressCount}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">In Progress</p>
+          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_in_progress')}</p>
         </div>
         <div className="bg-white rounded-2xl p-3 shadow-card text-center">
           <p className="text-lg font-bold text-[#22C55E]">{resolvedCount}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">Resolved</p>
+          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_resolved')}</p>
         </div>
       </div>
 
@@ -160,10 +161,10 @@ export default function CitizenHome() {
       <div className="animate-fade-in-up">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-[#0F172A] tracking-tight">
-            Recent Grievances
+            {t('home_recent_grievances')}
           </h2>
           <button className="text-xs font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-colors">
-            View All
+            {t('home_view_all')}
           </button>
         </div>
 
@@ -174,7 +175,7 @@ export default function CitizenHome() {
         )}
 
         {!loading && recentGrievances.length === 0 && !error && (
-          <p className="text-xs text-[#94A3B8] px-1">No reports filed yet.</p>
+          <p className="text-xs text-[#94A3B8] px-1">{t('home_no_reports_filed')}</p>
         )}
 
         <div className="space-y-2.5">
@@ -191,11 +192,11 @@ export default function CitizenHome() {
                     <span className="text-[10px] text-[#94A3B8]">{formatRelativeTime(g.created_at)}</span>
                   </div>
                   <p className="text-sm font-medium text-[#0F172A] truncate">
-                    {g.summary || 'No description available'}
+                    {g.summary || t('home_no_description')}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-[10px] font-medium text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-md">
-                      {g.category || 'Uncategorized'}
+                      {g.category || t('home_uncategorized')}
                     </span>
                     <StatusChip status={g.status === 'resolved' ? 'resolved' : 'processing'} />
                   </div>
@@ -212,7 +213,7 @@ export default function CitizenHome() {
           a citizen's constituency automatically from location. */}
       <div className="bg-white rounded-3xl p-5 shadow-card animate-fade-in-up">
         <h2 className="text-sm font-semibold text-[#0F172A] mb-3 tracking-tight">
-          Your Constituency
+          {t('home_your_constituency')}
         </h2>
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-[rgba(37,99,235,0.08)] flex items-center justify-center shrink-0">

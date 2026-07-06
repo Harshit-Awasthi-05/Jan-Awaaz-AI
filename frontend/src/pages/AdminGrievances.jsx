@@ -3,7 +3,7 @@ import { Search, ChevronDown } from 'lucide-react';
 import GrievanceTable from '../components/GrievanceTable';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 function formatDate(isoString) {
   if (!isoString) return '';
