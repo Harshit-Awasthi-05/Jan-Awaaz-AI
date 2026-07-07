@@ -13,6 +13,7 @@ router = APIRouter(prefix="/citizen", tags=["Citizen Reporting"])
 
 class PhoneOtpRequest(BaseModel):
     phone_number: str  # E.164 format, e.g. +919876543210
+    is_signup: bool
 
 
 class PhoneOtpVerify(BaseModel):
@@ -23,6 +24,18 @@ class PhoneOtpVerify(BaseModel):
 
 @router.post("/request-otp")
 async def request_citizen_otp(payload: PhoneOtpRequest):
+    try:
+        user = firebase_auth.get_user_by_phone_number(payload.phone_number)
+        user_exists = True
+    except firebase_auth.UserNotFoundError:
+        user_exists = False
+
+    if payload.is_signup and user_exists:
+        raise HTTPException(status_code=400, detail="User already exists. Please log in.")
+    
+    if not payload.is_signup and not user_exists:
+        raise HTTPException(status_code=404, detail="User not found. Please sign up first.")
+
     success = send_citizen_otp(payload.phone_number)
     if not success:
         raise HTTPException(status_code=502, detail="Failed to send OTP. Please try again.")
