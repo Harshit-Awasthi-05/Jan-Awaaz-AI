@@ -84,10 +84,10 @@ export default function CitizenLogin() {
           {language === 'en' ? 'हिं' : 'EN'}
         </button>
         <h1 className="text-lg font-bold text-[#0F172A] mb-1">
-          {mode === "login" ? t('login_title') : "Sign Up"}
+          {mode === "login" ? t('login_title') : t('signup_title')}
         </h1>
         <p className="text-xs text-[#64748B] mb-5">
-          {mode === "login" ? t('login_subtitle') : "Create an account to track your grievances."}
+          {mode === "login" ? t('login_subtitle') : t('signup_subtitle')}
         </p>
 
         {error && (
@@ -144,8 +144,8 @@ export default function CitizenLogin() {
                 className="text-xs text-[#2563EB] font-semibold hover:underline"
               >
                 {mode === "login"
-                  ? "Don't have an account? Sign Up"
-                  : "Already have an account? Log In"}
+                  ? t('login_toggle_signup')
+                  : t('login_toggle_login')}
               </button>
             </div>
           </form>
