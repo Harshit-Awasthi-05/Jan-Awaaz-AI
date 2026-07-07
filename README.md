@@ -1,132 +1,327 @@
-# 🇮🇳 Jan Awaaz AI — People's Priorities
+# 🇮🇳 Jan Awaaz AI --- People's Priorities
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-teal.svg)](https://fastapi.tiangolo.com/)
-[![Vite](https://img.shields.io/badge/frontend-vite-blueviolet.svg)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/frontend-React%2018-61DAFB.svg)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/build-Vite-blueviolet.svg)](https://vitejs.dev/)
 [![Gemini](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-orange.svg)](https://ai.google.dev/)
 [![Firebase](https://img.shields.io/badge/database-Firebase-FFCA28.svg)](https://firebase.google.com/)
 [![BigQuery](https://img.shields.io/badge/analytics-BigQuery-4285F4.svg)](https://cloud.google.com/bigquery)
 [![Docker](https://img.shields.io/badge/deploy-Docker%20Compose-2496ED.svg)](https://docs.docker.com/compose/)
 
-> **Track 1 — AI for Constituency Development Planning**
-> A multilingual AI platform where citizens submit development suggestions via text, photos, or WhatsApp messages. The system analyzes submissions using Gemini 2.5 Flash, maps demand hotspots, and combines citizen feedback with constituency demographics to recommend and rank high-priority development works an MP can act on.
+> **Track 1 --- AI for Constituency Development Planning**
+
+**Jan Awaaz AI** is a multilingual, AI-powered citizen grievance and
+constituency development intelligence platform. Citizens can submit
+local development issues through a mobile-first web application or
+WhatsApp using text and photos. The platform analyzes every report with
+Gemini 2.5 Flash, identifies issue categories and severity, maps demand
+hotspots, and combines citizen feedback with demographic and
+infrastructure data to rank high-priority development works for elected
+representatives.
+
+The system connects citizen participation with evidence-based
+governance: citizens get a simple reporting and tracking experience,
+while MPs receive real-time analytics, grievance intelligence,
+constituent insights, and AI-assisted development priorities.
 
 ## The Problem
 
-MPs receive development requests through public meetings, letters, social media, grievance portals, and direct representations — while local development plans contain dozens of competing proposed projects. There is **no objective way** to consolidate citizen feedback, spot recurring needs, and weigh competing proposals against actual demand.
+MPs and public representatives receive development requests through
+public meetings, letters, social media, grievance portals, WhatsApp
+messages, and direct representations. These inputs are fragmented across
+channels and difficult to compare objectively.
+
+At the same time, constituency development plans contain many competing
+proposals. Without a unified intelligence layer, decision-makers
+struggle to:
+
+-   consolidate citizen feedback from multiple channels;
+-   identify repeated complaints and geographic demand hotspots;
+-   compare the severity and urgency of different local issues;
+-   connect public demand with demographic and infrastructure gaps;
+-   track grievance progress transparently; and
+-   prioritize development works using measurable evidence.
 
 ## Our Solution
 
-Jan Awaaz AI is a **production-ready, end-to-end AI platform** that:
+Jan Awaaz AI provides an end-to-end workflow for citizen reporting, AI
+analysis, grievance management, and constituency planning.
 
-1. **Collects** citizen grievances via a mobile-first web app (text + photo) and WhatsApp Business API integration
-2. **Analyzes** each submission with **Gemini 2.5 Flash** multimodal AI to extract category, severity, summary, and an actionable insight for officials
-3. **Ranks** development priorities using a BigQuery scoring model that combines real complaint volume, severity weighting, and constituency demographic/infrastructure data
-4. **Presents** everything in a real-time MP dashboard with live analytics, interactive grievance details with location mapping, and AI-generated constituency insights
+1.  **Collect** citizen grievances through a mobile-first web
+    application and WhatsApp Business integration.
+2.  **Authenticate** citizens using phone-based OTP verification without
+    requiring email accounts or passwords.
+3.  **Analyze** text and images with Gemini 2.5 Flash to extract
+    category, severity, summary, and actionable insight.
+4.  **Store** complaint records in Cloud Firestore and uploaded media in
+    Cloudinary.
+5.  **Aggregate** report data into BigQuery for analytical processing.
+6.  **Rank** constituency priorities using complaint volume, severity
+    weighting, demographic context, and infrastructure gaps.
+7.  **Present** live grievance data, analytics, constituent information,
+    maps, and AI-generated insights through an MP dashboard.
+8.  **Track** grievance progress from submission through resolution.
 
 ## Architecture Overview
 
-```mermaid
+The platform is structured as a decoupled application with a React
+frontend and FastAPI backend. Firebase provides citizen identity and
+real-time operational data, BigQuery handles constituency-scale
+analytics, Gemini performs multimodal AI analysis, Cloudinary stores
+citizen-uploaded media, and Twilio enables OTP and WhatsApp
+communication.
+
+``` mermaid
 graph TD
     subgraph "Citizen Channels"
         App["📱 Mobile Web App"]
         WA["💬 WhatsApp Business API"]
     end
 
+    subgraph "Frontend"
+        React["React 18 + Vite"]
+        Router["React Router"]
+    end
+
     subgraph "Backend (FastAPI)"
-        API["FastAPI (Uvicorn)"]
+        API["FastAPI / Uvicorn"]
+        AuthAPI["Authentication Services"]
+        Ingestion["Grievance Ingestion"]
+        MPAPI["MP Dashboard APIs"]
         AI["Gemini 2.5 Flash"]
     end
 
     subgraph "Google Cloud Platform"
-        Auth["Firebase Auth"]
-        FS["Cloud Firestore"]
+        FirebaseAuth["Firebase Authentication"]
+        Firestore["Cloud Firestore"]
         BQ["BigQuery"]
     end
 
     subgraph "External Services"
-        Twilio["Twilio Verify (SMS OTP)"]
-        Cloud["Cloudinary (Media)"]
+        Twilio["Twilio Verify + WhatsApp"]
+        Cloudinary["Cloudinary Media Storage"]
     end
 
-    App -->|HTTPS| API
-    WA -->|Webhook| API
-    API --> AI
-    API --> Auth
-    API --> FS
-    API --> BQ
-    API --> Cloud
-    API --> Twilio
+    App --> React
+    React -->|HTTPS / REST| API
+    WA -->|Webhook| Ingestion
+
+    API --> AuthAPI
+    API --> Ingestion
+    API --> MPAPI
+
+    AuthAPI --> FirebaseAuth
+    AuthAPI --> Twilio
+
+    Ingestion --> AI
+    Ingestion --> Firestore
+    Ingestion --> BQ
+    Ingestion --> Cloudinary
+
+    MPAPI --> Firestore
+    MPAPI --> BQ
 ```
 
 ## Key Features
 
-### AI/Technical Execution (Gemini 2.5 Flash)
+### Multimodal AI Grievance Analysis
 
-| Feature | Description |
-|---------|-------------|
-| **Multimodal Report Analysis** | Every citizen submission (photo + text) is analyzed by Gemini in a single multimodal call, extracting `category`, `severity`, a one-sentence `summary`, and an `actionable_insight` for the responsible official |
-| **Language-Aware AI** | Gemini dynamically generates summaries and actionable insights in Hindi (Devanagari) or English based on the citizen's selected language preference |
-| **AI-Powered Priority Ranking** | A BigQuery scoring model combines complaint volume, severity weighting, and constituency demographic data into a single `mp_priority_score`, surfacing the highest-need areas objectively |
-| **AI-Generated Dashboard Insights** | The MP dashboard generates contextual AI insights (e.g., "Most reported: Road — 43% of total") computed live from real Firestore data |
+Every citizen submission can contain both text and an image. Gemini 2.5
+Flash analyzes the complete report in a single multimodal workflow and
+returns structured grievance intelligence.
 
-### Inclusivity & Accessibility
+The AI extracts:
 
-| Feature | Description |
-|---------|-------------|
-| **Bilingual Interface (English/Hindi)** | Full UI translation for the entire citizen-facing application — login, home, submission form, status tracking, profile — powered by a custom `LanguageContext` with 50+ translation keys |
-| **WhatsApp Integration** | Citizens can submit grievances by sending a photo + text message to a WhatsApp Business number. The system processes WhatsApp media, runs Gemini AI analysis, and automatically replies with a confirmation |
-| **Phone-Based Passwordless Auth** | Citizens sign in using only their phone number + OTP (via Twilio Verify), eliminating the need for email accounts or passwords — critical for low-literacy and rural users |
-| **Mobile-First Design** | Responsive, touch-optimized interface with bottom navigation, large tap targets, and progressive location detection (Geolocation API) |
+-   `category`
+-   `severity`
+-   one-sentence `summary`
+-   `actionable_insight`
 
-### Deployability & Scalability
+The result is stored with the complaint and surfaced directly to
+officials in the administrative dashboard.
 
-| Feature | Description |
-|---------|-------------|
-| **Docker Compose Deployment** | One-command deployment with `docker-compose up` — the entire platform (backend + frontend + Nginx reverse proxy) runs in containers with health checks |
-| **Firebase + Firestore** | Serverless, auto-scaling database with zero infrastructure management. Handles real-time reads/writes per request |
-| **BigQuery Analytics** | Constituency demographics + citizen reports joined in a single analytic query — scales to millions of rows without provisioning compute |
-| **Secure MP Provisioning** | MP accounts are stored in Firestore with bcrypt-hashed passwords. A CLI script (`create_mp.py`) enables secure account creation without exposing credentials in code |
+### Language-Aware AI
 
-### Core Platform Features
+The citizen-facing application supports English and Hindi. AI-generated
+summaries and actionable insights can follow the citizen's selected
+language preference, allowing the system to produce Hindi content in
+Devanagari or English content as required.
 
-- **Real-Time MP Dashboard**: Live category breakdowns, status distribution, weekly activity charts, and AI-generated insights — all computed from real Firestore data, with professional skeleton loading states
-- **Interactive Grievance Details**: Click any grievance to view the full report — original photo, GPS location on a map, Gemini-generated summary, severity, and actionable insight
-- **Constituent Directory**: Citizens who have filed grievances are aggregated with real counts, last-active dates, and cross-referenced against Firebase Auth records
-- **Status Tracking**: Citizens track live status (`submitted` → `in_progress` → `resolved`) of every report filed
-- **Geolocation Capture**: Automatic GPS coordinate capture during submission, stored with each complaint for hotspot mapping
+### AI-Powered Priority Ranking
+
+BigQuery combines citizen complaint data with constituency demographic
+and infrastructure information. The analytical model uses:
+
+-   complaint volume;
+-   severity weighting;
+-   geographic concentration;
+-   demographic context; and
+-   infrastructure gaps.
+
+These signals are combined into an `mp_priority_score` that helps
+surface the highest-need development areas objectively.
+
+### AI-Generated Dashboard Insights
+
+The MP dashboard computes live patterns from Firestore data and converts
+them into concise administrative insights, such as dominant grievance
+categories, status distribution, reporting trends, and high-demand issue
+areas.
+
+### Bilingual Citizen Experience
+
+The complete citizen-facing interface supports English and Hindi across:
+
+-   authentication;
+-   home dashboard;
+-   grievance submission;
+-   grievance tracking;
+-   updates;
+-   profile; and
+-   navigation.
+
+The translation system is implemented through a custom
+`LanguageContext`.
+
+### WhatsApp Grievance Submission
+
+Citizens can submit a grievance by sending a photo and text message
+through WhatsApp. The backend receives the webhook, downloads the media,
+identifies the citizen, runs AI analysis, stores the complaint, and
+sends an automatic confirmation.
+
+### Phone-Based Passwordless Authentication
+
+Citizens authenticate using a phone number and OTP through Twilio
+Verify. The flow removes the need for email accounts and passwords,
+making the platform more accessible for rural and low-literacy users.
+
+### Real-Time MP Dashboard
+
+The administrative dashboard provides:
+
+-   category breakdowns;
+-   grievance status distribution;
+-   weekly activity trends;
+-   AI-generated insights;
+-   grievance details;
+-   citizen information; and
+-   development priority analytics.
+
+Dashboard data is computed from live Firestore records.
+
+### Interactive Grievance Details
+
+Officials can inspect a grievance and view:
+
+-   the original citizen description;
+-   uploaded image;
+-   GPS coordinates;
+-   mapped location;
+-   AI-generated summary;
+-   severity classification;
+-   actionable insight; and
+-   current grievance status.
+
+### Constituent Directory
+
+Citizens who submit grievances are aggregated into a constituent
+directory with complaint counts, activity information, and identity data
+cross-referenced with Firebase Authentication records.
+
+### Status Tracking
+
+Citizens can track grievance progress through the lifecycle:
+
+``` text
+submitted → in_progress → resolved
+```
+
+### Geolocation Capture
+
+The submission workflow captures GPS coordinates through the browser
+Geolocation API. Location data is stored with each complaint and can be
+used for map visualization and hotspot analysis.
+
+### Containerized Deployment
+
+The full platform can be launched using Docker Compose. Backend,
+frontend, and Nginx services run in containers with health-check
+support.
 
 ## Tech Stack
 
-| Layer             | Technology                           | Role                                                              |
-| ----------------- | ------------------------------------ | ----------------------------------------------------------------- |
-| Frontend          | React 18, Vite, React Router         | Component-based citizen app and MP admin dashboard                |
-| Styling           | Tailwind CSS                         | Utility-first responsive styling with skeleton loaders            |
-| Charts            | Recharts                             | Category breakdown, status distribution, weekly activity charts   |
-| Backend           | FastAPI, Uvicorn                     | Async Python API with structured CORS and router registration     |
-| AI                | Gemini 2.5 Flash (google-generativeai) | Multimodal report analysis (text + image → structured JSON)     |
-| Auth (Citizens)   | Firebase Auth + Twilio Verify        | Passwordless phone OTP → Firebase custom token                    |
-| Auth (MPs)        | Firestore + PyJWT + bcrypt           | Secure password-hashed credentials with JWT session tokens        |
-| Database          | Cloud Firestore                      | Live complaint records and MP user credentials                    |
-| Analytics         | BigQuery                             | Priority-ranking query combining reports + demographics           |
-| Media             | Cloudinary                           | Citizen-uploaded photos stored and served via CDN                  |
-| Messaging         | Twilio (SMS + WhatsApp)              | OTP delivery and WhatsApp Business API integration                |
-| Deployment        | Docker Compose, Nginx                | Containerized production deployment with health checks            |
+  -----------------------------------------------------------------------
+  Component               Technology              Description
+  ----------------------- ----------------------- -----------------------
+  Frontend                React 18, Vite, React   Mobile-first citizen
+                          Router                  application and MP
+                                                  dashboard
+
+  Styling                 Tailwind CSS            Responsive
+                                                  utility-first interface
+                                                  and loading states
+
+  Charts                  Recharts                Category, status, and
+                                                  activity visualizations
+
+  Backend                 FastAPI, Uvicorn        Asynchronous Python API
+                                                  and service
+                                                  orchestration
+
+  AI                      Gemini 2.5 Flash        Multimodal grievance
+                                                  analysis and generated
+                                                  insights
+
+  Citizen Authentication  Firebase Auth + Twilio  Passwordless phone OTP
+                          Verify                  and Firebase custom
+                                                  tokens
+
+  MP Authentication       Firestore + PyJWT +     Hashed credentials and
+                          bcrypt                  JWT sessions
+
+  Database                Cloud Firestore         Live grievance,
+                                                  citizen, and MP records
+
+  Analytics               BigQuery                Priority scoring and
+                                                  constituency data
+                                                  analysis
+
+  Media                   Cloudinary              Citizen-uploaded image
+                                                  storage and CDN
+                                                  delivery
+
+  Messaging               Twilio                  SMS OTP and WhatsApp
+                                                  Business integration
+
+  Deployment              Docker Compose, Nginx   Containerized
+                                                  application deployment
+  -----------------------------------------------------------------------
 
 ## Google Cloud Products Used
 
-| Product | How It's Used |
-|---------|---------------|
-| **Gemini 2.5 Flash** (AI/ML & Generative AI) | Core AI engine — multimodal analysis of citizen-submitted photos + text to extract category, severity, summary, and actionable insights |
-| **Cloud Firestore** (Data & Backend) | Primary real-time database storing complaint documents, MP user credentials, and citizen records |
-| **BigQuery** (Data & Backend) | Analytical engine joining `citizen_reports` with `constituency_demographics` to compute priority scores |
-| **Firebase Authentication** (Data & Backend) | Citizen identity management with custom token issuance for phone-based auth |
+  -----------------------------------------------------------------------
+  Product                             How It Is Used
+  ----------------------------------- -----------------------------------
+  Gemini 2.5 Flash                    Multimodal analysis of
+                                      citizen-submitted text and images
+
+  Cloud Firestore                     Primary real-time operational
+                                      database
+
+  BigQuery                            Analytical engine for
+                                      development-priority scoring
+
+  Firebase Authentication             Citizen identity management and
+                                      custom-token authentication
+  -----------------------------------------------------------------------
 
 ## Logic Flows
 
 ### Citizen Report Submission
 
-```mermaid
+``` mermaid
 sequenceDiagram
     autonumber
     actor Citizen
@@ -137,20 +332,20 @@ sequenceDiagram
     participant Firestore
     participant BigQuery
 
-    Citizen->>FE: Attach photo + description, submit
-    FE->>API: POST /ingestion/app-upload (multipart, Firebase ID token)
-    API-->>FE: 200 "queued for AI processing"
-    API->>Cloudinary: Upload media file
-    Cloudinary-->>API: Secure media URL
-    API->>Gemini: Analyze report (text + image)
-    Gemini-->>API: {category, severity, summary, actionable_insight}
+    Citizen->>FE: Add photo, description, and location
+    FE->>API: POST /ingestion/app-upload
+    API-->>FE: Report accepted for processing
+    API->>Cloudinary: Upload media
+    Cloudinary-->>API: Return secure media URL
+    API->>Gemini: Analyze text + image
+    Gemini-->>API: category, severity, summary, actionable_insight
     API->>Firestore: Save complaint document
-    API->>BigQuery: Append row to citizen_reports
+    API->>BigQuery: Append analytics row
 ```
 
 ### WhatsApp Grievance Submission
 
-```mermaid
+``` mermaid
 sequenceDiagram
     autonumber
     actor Citizen
@@ -159,18 +354,42 @@ sequenceDiagram
     participant Gemini as Gemini 2.5 Flash
     participant Firestore
 
-    Citizen->>WA: Send photo + text message
-    WA->>API: POST /ingestion/whatsapp-webhook (form data)
-    API->>API: Download media, resolve citizen UID
-    API->>Gemini: Analyze report (text + image)
-    Gemini-->>API: {category, severity, summary, actionable_insight}
-    API->>Firestore: Save complaint document
-    API->>WA: Reply "Your complaint has been registered"
+    Citizen->>WA: Send photo + text
+    WA->>API: POST /ingestion/whatsapp-webhook
+    API->>API: Download media and resolve citizen UID
+    API->>Gemini: Analyze report
+    Gemini-->>API: Structured grievance intelligence
+    API->>Firestore: Save complaint
+    API->>WA: Send registration confirmation
+```
+
+### Citizen OTP Authentication
+
+``` mermaid
+sequenceDiagram
+    autonumber
+    actor Citizen
+    participant FE as React Frontend
+    participant API as FastAPI Backend
+    participant Twilio as Twilio Verify
+    participant Firebase as Firebase Auth
+
+    Citizen->>FE: Enter phone number
+    FE->>API: Request OTP
+    API->>Twilio: Send verification code
+    Twilio-->>Citizen: Deliver OTP
+    Citizen->>FE: Enter OTP
+    FE->>API: Verify OTP
+    API->>Twilio: Validate code
+    Twilio-->>API: Verification approved
+    API->>Firebase: Resolve/create citizen identity
+    Firebase-->>API: Return authentication identity
+    API-->>FE: Return authenticated session
 ```
 
 ### MP Priority Ranking
 
-```mermaid
+``` mermaid
 flowchart TD
     classDef data fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px,color:#000
     classDef process fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
@@ -178,51 +397,77 @@ flowchart TD
 
     Reports["citizen_reports (BigQuery)"]:::data
     Demo["constituency_demographics (BigQuery)"]:::data
-    Query["PRIORITY_QUERY: volume + severity_score + infra_gap"]:::process
-    Score["mp_priority_score per constituency"]:::store
+    Query["Priority Model: volume + severity + infrastructure gap"]:::process
+    Score["mp_priority_score"]:::store
+    Dashboard["MP Priority Dashboard"]:::store
 
     Reports --> Query
     Demo --> Query
     Query --> Score
+    Score --> Dashboard
+```
+
+### MP Dashboard Data Flow
+
+``` mermaid
+sequenceDiagram
+    autonumber
+    actor MP
+    participant FE as Admin Dashboard
+    participant API as FastAPI Backend
+    participant Firestore
+    participant BigQuery
+    participant AI as AI Insight Layer
+
+    MP->>FE: Open dashboard
+    FE->>API: Request overview and analytics
+    API->>Firestore: Fetch live grievance records
+    Firestore-->>API: Complaint and citizen data
+    API->>BigQuery: Request priority analytics
+    BigQuery-->>API: Ranked development priorities
+    API->>AI: Generate contextual insights
+    AI-->>API: Administrative summaries
+    API-->>FE: Return dashboard payload
+    FE-->>MP: Render analytics and priorities
 ```
 
 ## Project Structure
 
-```
+``` text
 .
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/              # MP login + Twilio OTP verification
-│   │   │   ├── citizen/           # Citizen OTP auth + complaint listing
-│   │   │   ├── complaints/        # Complaint create/read services (Firestore + BigQuery)
-│   │   │   ├── ingestion/         # Report intake: app uploads, WhatsApp webhook
-│   │   │   └── mp/                # MP dashboard: overview, complaints, constituents, priority ranking
+│   │   │   ├── auth/               # MP login and Twilio OTP verification
+│   │   │   ├── citizen/            # Citizen OTP auth and complaint listing
+│   │   │   ├── complaints/         # Complaint create/read services
+│   │   │   ├── ingestion/          # App uploads and WhatsApp webhook
+│   │   │   └── mp/                 # MP dashboard and priority APIs
 │   │   ├── core/
-│   │   │   ├── ai_service.py      # Gemini 2.5 Flash multimodal report analysis
-│   │   │   ├── bigquery_client.py # BigQuery client singleton
-│   │   │   ├── firebase.py        # Firebase Auth helpers
-│   │   │   ├── firestore_client.py# Firestore client singleton
-│   │   │   ├── security.py        # JWT, bcrypt, OTP, auth dependencies
-│   │   │   ├── twilio_service.py  # Twilio SMS/WhatsApp service
-│   │   │   └── config.py          # Pydantic settings from .env
-│   │   └── main.py
+│   │   │   ├── ai_service.py       # Gemini multimodal analysis
+│   │   │   ├── bigquery_client.py  # BigQuery client singleton
+│   │   │   ├── firebase.py         # Firebase authentication helpers
+│   │   │   ├── firestore_client.py # Firestore client singleton
+│   │   │   ├── security.py         # JWT, bcrypt, OTP, auth dependencies
+│   │   │   ├── twilio_service.py   # Twilio SMS and WhatsApp services
+│   │   │   └── config.py           # Environment-based settings
+│   │   └── main.py                 # FastAPI application entry point
 │   ├── scripts/
-│   │   └── create_mp.py           # CLI tool to provision MP accounts in Firestore
+│   │   └── create_mp.py            # Secure MP account provisioning CLI
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── Citizen*.jsx       # Login, Home, Submit, Track, Updates, Profile
-│   │   │   ├── Admin*.jsx         # Dashboard, Grievances, Constituents, Analytics, Settings
-│   │   │   └── MPLogin.jsx        # MP email/password + OTP login
-│   │   ├── layouts/               # CitizenLayout, AdminLayout shells
-│   │   ├── components/            # StatCard, StatusChip, GrievanceTable, GrievanceModal, Skeletons
+│   │   │   ├── Citizen*.jsx        # Citizen login, home, submit, track, updates, profile
+│   │   │   ├── Admin*.jsx          # Dashboard, grievances, constituents, analytics, settings
+│   │   │   └── MPLogin.jsx         # MP authentication
+│   │   ├── layouts/                # CitizenLayout and AdminLayout
+│   │   ├── components/             # Cards, tables, modals, chips, skeletons
 │   │   ├── context/
-│   │   │   ├── AuthContext.jsx    # MP + Citizen auth state with localStorage persistence
-│   │   │   └── LanguageContext.jsx# Bilingual (EN/HI) translation system
-│   │   └── firebase.js            # Firebase Web SDK init with browserLocalPersistence
+│   │   │   ├── AuthContext.jsx     # MP and citizen authentication state
+│   │   │   └── LanguageContext.jsx # English/Hindi translation system
+│   │   └── firebase.js             # Firebase Web SDK initialization
 │   ├── Dockerfile
 │   └── package.json
 ├── docker-compose.yml
@@ -235,62 +480,153 @@ flowchart TD
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- A Firebase project with Authentication and Firestore enabled
-- A GCP project with BigQuery enabled
-- A Cloudinary account
-- A Twilio account with Verify service
-- A Gemini API key ([aistudio.google.com/apikey](https://aistudio.google.com/apikey))
+Ensure the following are available:
 
-### Quick Start (Docker)
+-   Python 3.11 or newer
+-   Node.js 18 or newer
+-   Docker and Docker Compose
+-   Firebase project with Authentication and Firestore enabled
+-   Google Cloud project with BigQuery enabled
+-   Gemini API key
+-   Cloudinary account
+-   Twilio account with a Verify service
+-   WhatsApp Business configuration if WhatsApp submission is enabled
 
-```bash
-# Clone the repo
+### Quick Start with Docker
+
+1.  Clone the repository:
+
+``` bash
 git clone https://github.com/Harshit-Awasthi-05/Jan-Awaaz-AI.git
 cd Jan-Awaaz-AI
+```
 
-# Configure environment variables
+2.  Create environment files:
+
+``` bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-# Fill in all required keys (see .env.example files)
+```
 
-# Launch the entire stack
+3.  Add the required credentials and configuration values.
+
+4.  Launch the complete stack:
+
+``` bash
 docker-compose up --build
 ```
 
-The frontend is live at `http://localhost` and the API at `http://localhost:8000`.
+The frontend is available at:
 
-### Manual Setup
+``` text
+http://localhost
+```
 
-1. **Backend**:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate   # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   cp .env.example .env
-   # Fill in: GEMINI_API_KEY, GOOGLE_APPLICATION_CREDENTIALS, SECRET_KEY,
-   # CLOUDINARY_*, TWILIO_*, GCP_PROJECT_ID
-   uvicorn main:app --reload
-   ```
+The API is available at:
 
-2. **Firebase Service Account**: Download from Firebase Console → Project Settings → Service Accounts → Generate New Private Key. Save in `backend/` and set `GOOGLE_APPLICATION_CREDENTIALS` in `.env`.
+``` text
+http://localhost:8000
+```
 
-3. **Frontend**:
-   ```bash
-   cd frontend
-   npm install
-   cp .env.example .env
-   # Set VITE_API_BASE_URL and Firebase Web SDK config
-   npm run dev
-   ```
+## Manual Development Setup
 
-### Creating MP Accounts
+### Backend
 
-MP accounts are securely provisioned via a CLI script (not through the UI):
+``` bash
+cd backend
+python -m venv venv
+```
 
-```bash
+Activate the virtual environment.
+
+**Windows PowerShell:**
+
+``` powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**Windows Command Prompt:**
+
+``` cmd
+venv\Scripts\activate
+```
+
+**Linux/macOS:**
+
+``` bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+``` bash
+pip install -r requirements.txt
+```
+
+Create the environment file:
+
+``` bash
+cp .env.example .env
+```
+
+Configure the required backend variables, including:
+
+``` text
+GEMINI_API_KEY
+GOOGLE_APPLICATION_CREDENTIALS
+SECRET_KEY
+CLOUDINARY_*
+TWILIO_*
+GCP_PROJECT_ID
+```
+
+Start the backend:
+
+``` bash
+uvicorn app.main:app --reload
+```
+
+### Firebase Service Account
+
+1.  Open Firebase Console.
+2.  Go to **Project Settings**.
+3.  Open **Service Accounts**.
+4.  Select **Generate New Private Key**.
+5.  Save the JSON credential file securely in the backend environment.
+6.  Set `GOOGLE_APPLICATION_CREDENTIALS` to the credential file path.
+
+Do not commit the service-account file to Git.
+
+### Frontend
+
+``` bash
+cd frontend
+npm install
+```
+
+Create the environment file:
+
+``` bash
+cp .env.example .env
+```
+
+Configure:
+
+-   `VITE_API_BASE_URL`
+-   Firebase Web SDK settings
+
+Start the development server:
+
+``` bash
+npm run dev
+```
+
+## Creating MP Accounts
+
+MP accounts are provisioned securely through a CLI script rather than
+public registration.
+
+``` bash
 cd backend
 python scripts/create_mp.py \
   --email "mp@constituency.gov.in" \
@@ -300,16 +636,28 @@ python scripts/create_mp.py \
   --password "SecurePassword"
 ```
 
+The password is hashed with bcrypt before storage.
+
 ## API Reference
 
 ### Health Check
-```bash
+
+``` bash
 curl http://127.0.0.1:8000/
-# → {"status": "Core engine online", "project": "Jan Awaaz AI"}
+```
+
+Expected response:
+
+``` json
+{
+  "status": "Core engine online",
+  "project": "Jan Awaaz AI"
+}
 ```
 
 ### Submit a Citizen Report
-```bash
+
+``` bash
 curl -X POST http://127.0.0.1:8000/api/v1/ingestion/app-upload \
   -H "Authorization: Bearer <FIREBASE_ID_TOKEN>" \
   -F "file=@pothole.jpg" \
@@ -320,17 +668,165 @@ curl -X POST http://127.0.0.1:8000/api/v1/ingestion/app-upload \
 ```
 
 ### MP Dashboard Overview
-```bash
-curl -H "Authorization: Bearer <MP_JWT>" \
+
+``` bash
+curl \
+  -H "Authorization: Bearer <MP_JWT>" \
   http://127.0.0.1:8000/api/v1/mp/dashboard/overview
 ```
 
-## Security Notes
+## Environment Variables
 
-- Firebase Web API keys in `frontend/.env` are safe to expose in client code by design — Firebase access control is enforced by Security Rules and API key restrictions, not by hiding the key.
-- Real secrets (Gemini key, Twilio credentials, Cloudinary secret, JWT `SECRET_KEY`, Firebase service account JSON) live only in `backend/.env` and `backend/gcp-service-account.json`, both gitignored.
-- MP passwords are stored as bcrypt hashes in Firestore — never in plaintext.
+### Backend
+
+  Variable                           Purpose
+  ---------------------------------- -----------------------------------
+  `GEMINI_API_KEY`                   Gemini multimodal AI access
+  `GOOGLE_APPLICATION_CREDENTIALS`   Firebase/GCP service-account path
+  `GCP_PROJECT_ID`                   Google Cloud project identifier
+  `SECRET_KEY`                       JWT signing secret
+  `CLOUDINARY_CLOUD_NAME`            Cloudinary account identifier
+  `CLOUDINARY_API_KEY`               Cloudinary API access
+  `CLOUDINARY_API_SECRET`            Cloudinary secret
+  `TWILIO_ACCOUNT_SID`               Twilio account identifier
+  `TWILIO_AUTH_TOKEN`                Twilio authentication token
+  `TWILIO_VERIFY_SERVICE_SID`        Twilio Verify service identifier
+
+### Frontend
+
+  Variable                     Purpose
+  ---------------------------- -------------------------------------
+  `VITE_API_BASE_URL`          FastAPI backend base URL
+  Firebase Web SDK variables   Browser-side Firebase configuration
+
+## Security
+
+-   Firebase Web API keys may appear in frontend configuration because
+    access control is enforced through Firebase Security Rules and API
+    restrictions.
+-   Gemini credentials, Twilio credentials, Cloudinary secrets, JWT
+    secrets, and service-account files must remain backend-only.
+-   MP passwords are stored as bcrypt hashes and never as plaintext.
+-   MP API routes use JWT-based authentication.
+-   Citizen requests use Firebase identity tokens.
+-   Sensitive environment files and service-account credentials must be
+    included in `.gitignore`.
+-   Production deployments should restrict CORS origins to trusted
+    frontend domains.
+-   API credentials should be rotated immediately if accidentally
+    committed to version control.
+
+## Deployment
+
+### Docker Compose
+
+Build and launch the application:
+
+``` bash
+docker-compose up --build
+```
+
+Run in detached mode:
+
+``` bash
+docker-compose up --build -d
+```
+
+Stop the application:
+
+``` bash
+docker-compose down
+```
+
+### Production Deployment Considerations
+
+Before production deployment:
+
+-   replace development secrets with production credentials;
+-   configure HTTPS;
+-   restrict CORS;
+-   apply Firebase Security Rules;
+-   configure BigQuery dataset permissions;
+-   restrict service-account IAM roles;
+-   configure Twilio webhook URLs;
+-   set Cloudinary upload restrictions;
+-   enable logging and monitoring; and
+-   validate health checks for all services.
+
+## Testing and Verification
+
+Verify the backend health endpoint:
+
+``` bash
+curl http://127.0.0.1:8000/
+```
+
+Verify the frontend development build:
+
+``` bash
+cd frontend
+npm run build
+```
+
+Verify backend imports and application startup:
+
+``` bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+For production readiness, the project should maintain automated tests
+for:
+
+-   authentication;
+-   OTP verification;
+-   grievance submission;
+-   AI response parsing;
+-   Firestore operations;
+-   BigQuery synchronization;
+-   MP authorization; and
+-   dashboard APIs.
+
+## Typical User Journey
+
+### Citizen
+
+1.  Open the mobile web application.
+2.  Select English or Hindi.
+3.  Enter a phone number.
+4.  Verify the OTP.
+5.  Submit a grievance with text, photo, and location.
+6.  Receive confirmation.
+7.  Track the grievance status.
+8.  View updates until resolution.
+
+### MP / Official
+
+1.  Sign in through the MP portal.
+2.  Review the live constituency dashboard.
+3.  Inspect grievance trends and high-severity reports.
+4.  Open individual grievance details.
+5.  Review citizen location and AI-generated analysis.
+6.  Examine ranked development priorities.
+7.  Track grievance progress and constituency demand patterns.
+
+## Future Scope
+
+Potential extensions include:
+
+-   additional Indian languages;
+-   voice-based grievance submission;
+-   speech-to-text for low-literacy users;
+-   ward and panchayat-level hotspot maps;
+-   automated department routing;
+-   SLA tracking and escalation;
+-   duplicate grievance detection;
+-   semantic search across grievances;
+-   predictive issue trends;
+-   public transparency dashboards; and
+-   direct integration with government grievance systems.
 
 ## License
 
-Built for the Google AI Hackathon 2026 — Track 1: People's Priorities.
+Built for the **Google AI Hackathon 2026 --- Track 1: People's
+Priorities**.
