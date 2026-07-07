@@ -26,8 +26,14 @@ def _send_whatsapp_reply(to: str, body: str) -> None:
     try:
         from twilio.rest import Client
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        
+        # Ensure the from_ number is prefixed with 'whatsapp:'
+        sender_number = settings.TWILIO_WHATSAPP_NUMBER
+        if not sender_number.startswith("whatsapp:"):
+            sender_number = f"whatsapp:{sender_number}"
+            
         client.messages.create(
-            from_=settings.TWILIO_WHATSAPP_NUMBER,
+            from_=sender_number,
             to=to,
             body=body,
         )
