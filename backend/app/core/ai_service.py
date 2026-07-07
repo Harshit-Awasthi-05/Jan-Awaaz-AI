@@ -1,12 +1,11 @@
 import json
 import io
 from PIL import Image
-import google.generativeai as genai
+from google import genai
 from app.core.config import settings
 from app.core.logger import log
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 def analyze_citizen_report(text_content: str = None, file_bytes: bytes = None, language: str = "en") -> dict:
     lang_instruction = (
@@ -40,7 +39,10 @@ def analyze_citizen_report(text_content: str = None, file_bytes: bytes = None, l
             log.error(f"Image processing error for AI: {e}")
 
     try:
-        response = model.generate_content(contents)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents,
+        )
         response_text = response.text.strip()
 
         if response_text.startswith("```json"):
