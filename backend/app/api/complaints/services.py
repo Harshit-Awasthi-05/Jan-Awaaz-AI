@@ -72,10 +72,11 @@ def create_complaint(
 
 
 def get_complaints_by_citizen(citizen_uid: str) -> list[dict]:
+    from google.cloud.firestore_v1.base_query import FieldFilter
     db = get_db()
     query = (
         db.collection("complaints")
-        .where("citizen_uid", "==", citizen_uid)
+        .where(filter=FieldFilter("citizen_uid", "==", citizen_uid))
         .order_by("created_at", direction="DESCENDING")
     )
     return [doc.to_dict() for doc in query.stream()]
