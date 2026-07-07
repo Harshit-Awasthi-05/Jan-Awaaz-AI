@@ -36,23 +36,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def _build_govt_database() -> dict:
-    email = os.environ.get("MP_EMAIL", "mp@janawaaz.in")
-    name = os.environ.get("MP_NAME", "Jan Awaaz MP")
-    constituency = os.environ.get("MP_CONSTITUENCY", "Jan Awaaz Constituency")
-    phone = os.environ.get("MP_PHONE", "+910000000000")
-    password = os.environ.get("MP_PASSWORD", "hackathon2026")
-    return {
-        email: {
-            "name": name,
-            "constituency": constituency,
-            "phone": phone,
-            "password_hash": get_password_hash(password),
-        }
-    }
 
-
-GOVT_DATABASE = _build_govt_database()
 
 
 def create_access_token(data: dict) -> str:

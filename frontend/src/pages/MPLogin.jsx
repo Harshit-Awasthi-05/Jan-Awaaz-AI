@@ -7,6 +7,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api
 export default function MPLogin() {
   const [email, setEmail] = useState("");
   const [constituency, setConstituency] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState("credentials"); 
@@ -23,7 +24,7 @@ export default function MPLogin() {
       const res = await fetch(`${API_BASE}/mp/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, constituency, password }),
+        body: JSON.stringify({ email, constituency, phone, password }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -51,7 +52,7 @@ export default function MPLogin() {
       if (!res.ok) {
         throw new Error(data.detail || "Invalid OTP");
       }
-      mpLogin(data.access_token, {
+      await mpLogin(data.access_token, {
         name: data.mp_name,
         email: data.mp_email,
         constituency: data.mp_constituency,
@@ -101,6 +102,20 @@ export default function MPLogin() {
               />
             </div>
             <div>
+              <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Phone Number</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="9889926618"
+                required
+                className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+              />
+              <p className="text-[11px] text-[#94A3B8] mt-1">
+                Enter your 10-digit mobile number. OTP will be sent here.
+              </p>
+            </div>
+            <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Password</label>
               <input
                 type="password"
@@ -124,7 +139,7 @@ export default function MPLogin() {
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
-                Enter OTP (check server console)
+                Enter the OTP sent to {phone || "your phone"}
               </label>
               <input
                 type="text"

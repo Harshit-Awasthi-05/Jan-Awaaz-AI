@@ -10,6 +10,7 @@ from app.api.auth import auth
 from app.api.ingestion import router as ingestion_router
 from app.api.citizen import router as citizen_router   
 from app.api.mp import router as mp_router
+from app.api.location import router as location_router
 
 
 @asynccontextmanager
@@ -45,6 +46,7 @@ app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(ingestion_router.router, prefix=settings.API_V1_STR)
 app.include_router(citizen_router.router, prefix=settings.API_V1_STR)  
 app.include_router(mp_router.router, prefix=settings.API_V1_STR) 
+app.include_router(location_router.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def read_root():

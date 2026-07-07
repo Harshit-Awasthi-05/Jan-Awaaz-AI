@@ -8,8 +8,11 @@ export function AuthProvider({ children }) {
   const [citizenUser, setCitizenUser] = useState(null);
   const [citizenToken, setCitizenToken] = useState(null);
   const [citizenLoading, setCitizenLoading] = useState(true);
-  const [mpToken, setMpToken] = useState(null);
-  const [mpInfo, setMpInfo] = useState(null);
+  const [mpToken, setMpToken] = useState(() => localStorage.getItem("mpToken"));
+  const [mpInfo, setMpInfo] = useState(() => {
+    const info = localStorage.getItem("mpInfo");
+    return info ? JSON.parse(info) : null;
+  });
 
   useEffect(() => {
     // onIdTokenChanged fires on sign-in/sign-out AND whenever Firebase
@@ -33,12 +36,22 @@ export function AuthProvider({ children }) {
 
   const citizenLogout = () => signOut(auth);
 
-  const mpLogin = (token, info) => {
+  const mpLogin = async (token, info) => {
+    // Clear any lingering citizen session first — RequireMP redirects to "/"
+    // whenever citizenUser is truthy, which would otherwise block MP access
+    // right after a successful MP login in the same browser/tab.
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+    localStorage.setItem("mpToken", token);
+    localStorage.setItem("mpInfo", JSON.stringify(info));
     setMpToken(token);
     setMpInfo(info);
   };
 
   const mpLogout = () => {
+    localStorage.removeItem("mpToken");
+    localStorage.removeItem("mpInfo");
     setMpToken(null);
     setMpInfo(null);
   };

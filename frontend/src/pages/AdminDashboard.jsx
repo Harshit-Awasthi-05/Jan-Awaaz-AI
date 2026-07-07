@@ -18,6 +18,7 @@ import {
 import StatCard from '../components/StatCard';
 import GrievanceTable from '../components/GrievanceTable';
 import SparkleIcon from '../components/SparkleIcon';
+import DashboardSkeleton from '../components/DashboardSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
   }, [mpToken]);
 
   if (loading) {
-    return <p className="text-sm text-[#64748B]">Loading dashboard...</p>;
+    return <DashboardSkeleton />;
   }
 
   return (

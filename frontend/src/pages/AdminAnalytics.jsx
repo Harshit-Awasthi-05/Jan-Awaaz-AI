@@ -3,6 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts';
+import AnalyticsSkeleton from '../components/AnalyticsSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
@@ -85,7 +86,7 @@ export default function AdminAnalytics() {
       )}
 
       {loading ? (
-        <p className="text-sm text-[#64748B]">Loading analytics...</p>
+        <AnalyticsSkeleton />
       ) : (
         <>
           <div className="grid grid-cols-12 gap-4">

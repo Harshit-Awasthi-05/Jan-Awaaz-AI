@@ -32,6 +32,8 @@ export default function CitizenSubmit() {
   const fileInputRef = useRef(null);
 
   const [mpConstituency, setMpConstituency] = useState('');
+  const [resolvedMp, setResolvedMp] = useState(null); // { mpName, confidence } once auto-detected
+  const [resolvingConstituency, setResolvingConstituency] = useState(false);
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
@@ -42,6 +44,31 @@ export default function CitizenSubmit() {
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  const resolveConstituencyFromLocation = async (latitude, longitude) => {
+    setResolvingConstituency(true);
+    try {
+      const res = await fetch(`${API_BASE}/location/resolve-constituency`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude, longitude }),
+      });
+      const data = await res.json();
+      if (res.ok && data.resolved) {
+        setMpConstituency(data.constituency);
+        setResolvedMp({ mpName: data.mp_name, confidence: data.confidence });
+      } else {
+        // Couldn't confidently resolve a constituency from this location —
+        // fall back to whatever /mp/info already set, and leave resolvedMp
+        // null so the UI doesn't claim a match that wasn't made.
+        setResolvedMp(null);
+      }
+    } catch {
+      setResolvedMp(null);
+    } finally {
+      setResolvingConstituency(false);
+    }
+  };
+
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus('error');
@@ -50,11 +77,10 @@ export default function CitizenSubmit() {
     setLocationStatus('detecting');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
+        const { latitude, longitude } = position.coords;
+        setLocation({ latitude, longitude });
         setLocationStatus('done');
+        resolveConstituencyFromLocation(latitude, longitude);
       },
       () => setLocationStatus('error'),
       { enableHighAccuracy: true, timeout: 10000 }
@@ -206,6 +232,20 @@ export default function CitizenSubmit() {
               {locationStatus === 'idle' && t('submit_location_idle')}
             </span>
           </button>
+          {locationStatus === 'done' && (
+            <p className="text-[11px] text-[#94A3B8] mt-1">
+              {resolvingConstituency && 'Detecting your constituency…'}
+              {!resolvingConstituency && resolvedMp && (
+                <>Constituency: <span className="text-[#475569] font-medium">{mpConstituency}</span> · MP: {resolvedMp.mpName}</>
+              )}
+              {!resolvingConstituency && !resolvedMp && mpConstituency && (
+                <>Constituency: <span className="text-[#475569] font-medium">{mpConstituency}</span></>
+              )}
+              {!resolvingConstituency && !resolvedMp && !mpConstituency && (
+                <>Could not auto-detect your constituency — it will be added manually.</>
+              )}
+            </p>
+          )}
         </div>
 
         <div>

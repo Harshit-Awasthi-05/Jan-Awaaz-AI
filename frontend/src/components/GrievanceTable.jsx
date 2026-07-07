@@ -2,7 +2,7 @@ import StatusChip from './StatusChip';
 
 const STATUS_OPTIONS = ['submitted', 'in_progress', 'resolved'];
 
-export default function GrievanceTable({ grievances, onStatusChange }) {
+export default function GrievanceTable({ grievances, onStatusChange, onRowClick }) {
   return (
     <div className="bg-white rounded-2xl shadow-card overflow-hidden animate-fade-in-up">
       <div className="overflow-x-auto">
@@ -36,7 +36,8 @@ export default function GrievanceTable({ grievances, onStatusChange }) {
             {grievances.map((g, i) => (
               <tr
                 key={g.id}
-                className="border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F1F5F9] transition-colors duration-100"
+                onClick={() => onRowClick && onRowClick(g)}
+                className="border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F1F5F9] transition-colors duration-100 cursor-pointer"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
                 <td className="py-2 px-4 text-sm font-mono text-[#64748B]">
@@ -73,7 +74,11 @@ export default function GrievanceTable({ grievances, onStatusChange }) {
                 <td className="py-2 px-4 text-right">
                   <select
                     value={g.status}
-                    onChange={(e) => onStatusChange && onStatusChange(g.id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      if (onStatusChange) onStatusChange(g.id, e.target.value);
+                    }}
                     className="text-xs font-medium text-[#0F172A] bg-white border border-[#E2E8F0] rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#2563EB]/30 cursor-pointer"
                   >
                     {STATUS_OPTIONS.map((opt) => (

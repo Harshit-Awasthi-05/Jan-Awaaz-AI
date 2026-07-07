@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
+import TableSkeleton from '../components/TableSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
@@ -89,7 +90,7 @@ export default function AdminConstituents() {
       )}
 
       {loading ? (
-        <p className="text-sm text-[#64748B]">Loading...</p>
+        <TableSkeleton columns={5} />
       ) : filtered.length === 0 ? (
         <p className="text-sm text-[#94A3B8]">No constituents found.</p>
       ) : (

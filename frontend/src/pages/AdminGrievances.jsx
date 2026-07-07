@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
 import GrievanceTable from '../components/GrievanceTable';
+import GrievanceModal from '../components/GrievanceModal';
+import TableSkeleton from '../components/TableSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
@@ -19,6 +21,7 @@ export default function AdminGrievances() {
   const [grievances, setGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedGrievance, setSelectedGrievance] = useState(null);
 
   useEffect(() => {
     if (!mpToken) return;
@@ -41,6 +44,12 @@ export default function AdminGrievances() {
         status: c.status || 'submitted',
         priority: c.severity || 'Low',
         date: formatDate(c.created_at),
+        action_insight: c.action_insight,
+        media_url: c.media_url,
+        latitude: c.latitude,
+        longitude: c.longitude,
+        constituency: c.constituency,
+        channel: c.channel
       }));
 
       setGrievances(mapped);
@@ -112,11 +121,23 @@ export default function AdminGrievances() {
       )}
 
       {loading ? (
-        <p className="text-sm text-[#64748B]">Loading grievances...</p>
+        <TableSkeleton />
       ) : grievances.length === 0 ? (
         <p className="text-sm text-[#94A3B8]">No grievances filed yet.</p>
       ) : (
-        <GrievanceTable grievances={grievances} onStatusChange={handleStatusChange} />
+        <GrievanceTable 
+          grievances={grievances} 
+          onStatusChange={handleStatusChange} 
+          onRowClick={(g) => setSelectedGrievance(g)} 
+        />
+      )}
+
+      {selectedGrievance && (
+        <GrievanceModal
+          grievance={selectedGrievance}
+          onClose={() => setSelectedGrievance(null)}
+          onStatusChange={handleStatusChange}
+        />
       )}
     </div>
   );
