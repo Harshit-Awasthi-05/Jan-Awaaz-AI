@@ -2,14 +2,14 @@ export default function AnalyticsSkeleton() {
   return (
     <div className="space-y-6 animate-pulse mt-6">
       <div className="grid grid-cols-12 gap-4">
-        {/* Weekly Activity Skeleton */}
+        
         <div className="col-span-8 bg-white rounded-2xl p-6 shadow-card h-[380px]">
           <div className="h-5 bg-slate-200 rounded-md w-32 mb-1" />
           <div className="h-4 bg-slate-200 rounded-md w-48 mb-6" />
           <div className="h-[280px] bg-slate-100 rounded-lg w-full" />
         </div>
 
-        {/* Status Pie Skeleton */}
+        
         <div className="col-span-4 bg-white rounded-2xl p-6 shadow-card h-[380px] flex flex-col items-center">
           <div className="w-full">
             <div className="h-5 bg-slate-200 rounded-md w-32 mb-1" />
@@ -24,7 +24,7 @@ export default function AnalyticsSkeleton() {
         </div>
       </div>
 
-      {/* Category Breakdown Skeleton */}
+      
       <div className="bg-white rounded-2xl p-6 shadow-card h-[320px]">
         <div className="h-5 bg-slate-200 rounded-md w-40 mb-1" />
         <div className="h-4 bg-slate-200 rounded-md w-48 mb-6" />

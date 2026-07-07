@@ -43,7 +43,6 @@ def _normalize_state(raw_state: str) -> str:
 
 
 async def reverse_geocode(latitude: float, longitude: float) -> dict:
-    """Reverse-geocode coordinates to an address via Nominatim."""
     params = {
         "format": "jsonv2",
         "lat": latitude,
@@ -58,8 +57,6 @@ async def reverse_geocode(latitude: float, longitude: float) -> dict:
 
 
 def _candidate_area_names(address: dict) -> list[str]:
-    """Pull out every address field that could plausibly resemble a
-    constituency name, in priority order (most specific first)."""
     fields = [
         "city",
         "town",
@@ -103,7 +100,7 @@ def match_constituency(address: dict) -> dict | None:
 
 
 async def resolve_constituency_from_coords(latitude: float, longitude: float) -> dict:
-    """Full pipeline: coords -> address -> constituency match."""
+    
     try:
         geo = await reverse_geocode(latitude, longitude)
     except Exception as e:

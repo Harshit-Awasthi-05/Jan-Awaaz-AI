@@ -57,9 +57,9 @@ export default function CitizenSubmit() {
         setMpConstituency(data.constituency);
         setResolvedMp({ mpName: data.mp_name, confidence: data.confidence });
       } else {
-        // Couldn't confidently resolve a constituency from this location —
-        // fall back to whatever /mp/info already set, and leave resolvedMp
-        // null so the UI doesn't claim a match that wasn't made.
+        
+        
+        
         setResolvedMp(null);
       }
     } catch {

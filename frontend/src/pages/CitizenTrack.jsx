@@ -67,7 +67,7 @@ export default function CitizenTrack() {
     <div className="space-y-4">
       <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">Track Grievances</h1>
 
-      {/* Search */}
+      
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
         <input
@@ -79,7 +79,7 @@ export default function CitizenTrack() {
         />
       </div>
 
-      {/* Filter Pills */}
+      
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
           <button
@@ -102,7 +102,7 @@ export default function CitizenTrack() {
         </p>
       )}
 
-      {/* List */}
+      
       {loading ? (
         <p className="text-sm text-[#64748B]">Loading...</p>
       ) : filtered.length === 0 ? (

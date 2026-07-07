@@ -15,7 +15,7 @@ export default function AdminLayout() {
           collapsed ? 'ml-[72px]' : 'ml-[280px]'
         }`}
       >
-        {/* Top Header */}
+        
         <header className="sticky top-0 z-30 h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-6">
           <div>
             <h1 className="text-lg font-semibold text-[#0F172A] tracking-tight">
@@ -41,7 +41,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
+        
         <main className="p-6">
           <Outlet />
         </main>

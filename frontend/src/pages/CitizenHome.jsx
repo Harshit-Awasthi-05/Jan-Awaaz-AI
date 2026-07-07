@@ -69,7 +69,7 @@ export default function CitizenHome() {
       }
     }
 
-    // Fetch public constituency info so the card shows real data
+    
     async function fetchConstituencyInfo() {
       try {
         const res = await fetch(`${API_BASE}/mp/info`);

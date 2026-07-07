@@ -115,7 +115,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      
       <div className="flex items-center justify-between animate-fade-in-up">
         <div>
           <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight">Overview</h2>
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         </p>
       )}
 
-      {/* Stat Cards — only metrics we can honestly compute */}
+      
       <div className="grid grid-cols-3 gap-4 stagger-children">
         <StatCard
           title="Total Grievances"
@@ -154,9 +154,9 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Charts Row */}
+      
       <div className="grid grid-cols-12 gap-4">
-        {/* Weekly Activity — real data, last 7 days */}
+        
         <div className="col-span-8 bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Category Breakdown — real data */}
+        
         <div className="col-span-4 bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
           <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-1">Categories</h3>
           <p className="text-xs text-[#94A3B8] mb-5">Breakdown by type</p>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* AI Insights — genuinely computed, full width */}
+      
       <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-2xl p-6 text-white animate-fade-in-up">
         <div className="flex items-center gap-2 mb-4">
           <SparkleIcon className="w-5 h-5" />
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Grievance Table */}
+      
       <div>
         <div className="flex items-center justify-between mb-4 animate-fade-in-up">
           <h3 className="text-base font-semibold text-[#0F172A] tracking-tight">

@@ -49,7 +49,7 @@ async def mp_login(request: LoginRequest):
     ):
         raise InvalidCredentialsException()
 
-    # Send real SMS OTP via Twilio Verify to the phone number the MP entered
+
     phone = _normalize_phone(request.phone)
     success = send_otp(phone)
     if not success:
@@ -76,7 +76,7 @@ async def mp_verify_otp(request: OTPRequest):
     if not user:
         raise InvalidOTPException()
 
-    # Verify real SMS OTP via Twilio Verify (must match the number the OTP was sent to)
+    
     if not verify_otp(_normalize_phone(user.get("phone", "")), request.otp):
         raise InvalidOTPException()
 

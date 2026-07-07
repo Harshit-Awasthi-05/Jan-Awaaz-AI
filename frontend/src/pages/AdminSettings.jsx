@@ -34,7 +34,7 @@ export default function AdminSettings() {
         <p className="text-sm text-[#64748B] mt-0.5">Manage your dashboard preferences</p>
       </div>
 
-      {/* Profile Section */}
+      
       <div className="bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
         <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-4 flex items-center gap-2">
           <User className="w-4 h-4 text-[#2563EB]" /> Profile Information
@@ -79,7 +79,7 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* Notifications */}
+      
       <div className="bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
         <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-4 flex items-center gap-2">
           <Bell className="w-4 h-4 text-[#14B8A6]" /> Notifications
@@ -100,7 +100,7 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* Save */}
+      
       <button className="flex items-center gap-2 bg-[#2563EB] text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-[#1D4ED8] transition-colors shadow-sm active:scale-[0.98]">
         <Save className="w-4 h-4" /> Save Changes
       </button>

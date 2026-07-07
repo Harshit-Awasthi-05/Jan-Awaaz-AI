@@ -13,7 +13,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Explicitly ensure persistence is local so sessions survive tab closures/reloads
+
 setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.error("Firebase Auth persistence error:", err);
 });

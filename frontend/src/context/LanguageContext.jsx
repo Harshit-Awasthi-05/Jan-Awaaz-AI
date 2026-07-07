@@ -4,7 +4,7 @@ const LanguageContext = createContext(null);
 
 
 const translations = {
-  // CitizenLayout / MobileBottomNav
+  
   nav_home: { en: "Home", hi: "होम" },
   nav_track: { en: "Track", hi: "ट्रैक" },
   nav_submit: { en: "Submit", hi: "सबमिट" },

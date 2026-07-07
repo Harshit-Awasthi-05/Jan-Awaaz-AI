@@ -37,7 +37,7 @@ export default function CitizenNotifications() {
 
   return (
     <div className="space-y-4 animate-fade-in-up pb-6">
-      {/* Header with back button */}
+      
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/profile')} className="p-2 -ml-2 rounded-full hover:bg-white transition-colors active:scale-95">
           <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
@@ -45,7 +45,7 @@ export default function CitizenNotifications() {
         <h1 className="text-lg font-bold text-[#0F172A] tracking-tight">Notification Settings</h1>
       </div>
 
-      {/* Channels section */}
+      
       <div>
         <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3 px-2">Delivery Channels</h2>
         <div className="stagger-children">
@@ -56,7 +56,7 @@ export default function CitizenNotifications() {
         </div>
       </div>
       
-      {/* Content section */}
+      
       <div className="mt-8">
         <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3 px-2">Alert Types</h2>
         <div className="stagger-children">

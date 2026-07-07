@@ -90,7 +90,7 @@ export default function AdminAnalytics() {
       ) : (
         <>
           <div className="grid grid-cols-12 gap-4">
-            {/* Weekly Activity */}
+            
             <div className="col-span-8 bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
               <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-1">Weekly Activity</h3>
               <p className="text-xs text-[#94A3B8] mb-5">Grievances filed vs resolved (last 7 days)</p>
@@ -110,7 +110,7 @@ export default function AdminAnalytics() {
               )}
             </div>
 
-            {/* Status Pie */}
+            
             <div className="col-span-4 bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
               <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-1">Status Distribution</h3>
               <p className="text-xs text-[#94A3B8] mb-5">Current breakdown of all grievances</p>
@@ -149,7 +149,7 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          {/* Category Breakdown */}
+          
           <div className="bg-white rounded-2xl p-6 shadow-card animate-fade-in-up">
             <h3 className="text-base font-semibold text-[#0F172A] tracking-tight mb-1">Category Breakdown</h3>
             <p className="text-xs text-[#94A3B8] mb-5">Number of grievances by category</p>

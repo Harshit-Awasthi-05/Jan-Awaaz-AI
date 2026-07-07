@@ -26,7 +26,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         collapsed ? 'w-[72px]' : 'w-[280px]'
       }`}
     >
-      {/* Logo */}
+      
       <div className="h-16 flex items-center px-5 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
           <SparkleIcon className="w-7 h-7 shrink-0" />
@@ -38,7 +38,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         </div>
       </div>
 
-      {/* Nav Links */}
+      
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
@@ -68,7 +68,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         ))}
       </nav>
 
-      {/* AI Badge */}
+      
       {!collapsed && (
         <div className="mx-3 mb-3 p-3 rounded-xl bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20 border border-white/5">
           <div className="flex items-center gap-2 mb-1">
@@ -81,7 +81,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         </div>
       )}
 
-      {/* Footer */}
+      
       <div className="border-t border-white/10 p-3 space-y-1">
         <button
           onClick={onToggle}

@@ -21,10 +21,10 @@ def test_mp_flow():
         print("❌ Login failed. Check credentials.")
         return
 
-    # 2. Check your FastAPI terminal for the OTP print statement!
+
     otp_code = input("\n👇 Enter the OTP printed in your FastAPI terminal: ")
     
-    # 3. Verify OTP
+
     verify_payload = {
         "email": "mp@janawaaz.in",
         "otp": otp_code
@@ -44,7 +44,7 @@ def test_citizen_flow():
     print("Note: To fully test this, you need a valid Firebase ID token.")
     print("If you send a request without one, it should cleanly block you with a 401.")
     
-    # Sending a report WITHOUT a valid Firebase token
+   
     headers = {"Authorization": "Bearer invalid_or_missing_token"}
     payload = {"report_details": "Pothole on Main St."}
     

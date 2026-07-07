@@ -15,11 +15,11 @@ export function AuthProvider({ children }) {
   });
 
   useEffect(() => {
-    // onIdTokenChanged fires on sign-in/sign-out AND whenever Firebase
-    // silently refreshes the ID token (tokens expire after 1 hour).
-    // onAuthStateChanged only fires on sign-in/sign-out, which left
-    // citizenToken stale after an hour and caused every citizen API call
-    // to fail with 401 for the rest of the session.
+    
+    
+    
+    
+    
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         const token = await user.getIdToken();
@@ -37,9 +37,9 @@ export function AuthProvider({ children }) {
   const citizenLogout = () => signOut(auth);
 
   const mpLogin = async (token, info) => {
-    // Clear any lingering citizen session first — RequireMP redirects to "/"
-    // whenever citizenUser is truthy, which would otherwise block MP access
-    // right after a successful MP login in the same browser/tab.
+    
+    
+    
     if (auth.currentUser) {
       await signOut(auth);
     }

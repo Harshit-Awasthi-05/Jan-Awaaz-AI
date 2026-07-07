@@ -1,7 +1,4 @@
-"""
-Run once to set up BigQuery: dataset + two tables.
-Usage: python setup_bigquery.py
-"""
+
 import os
 from dotenv import load_dotenv
 from google.cloud import bigquery
@@ -23,7 +20,7 @@ dataset.location = "asia-south1"
 client.create_dataset(dataset, exists_ok=True)
 print(f"Dataset ready: {dataset_ref}")
 
-# 2. citizen_reports table — mirrors what's in Firestore, but queryable with SQL
+
 reports_schema = [
     bigquery.SchemaField("complaint_id", "STRING"),
     bigquery.SchemaField("citizen_uid", "STRING"),
@@ -43,12 +40,12 @@ reports_table = bigquery.Table(reports_table_ref, schema=reports_schema)
 client.create_table(reports_table, exists_ok=True)
 print(f"Table ready: {reports_table_ref}")
 
-# 3. constituency_demographics — your mock public dataset
+
 demo_schema = [
     bigquery.SchemaField("constituency", "STRING"),
     bigquery.SchemaField("population", "INTEGER"),
     bigquery.SchemaField("literacy_rate", "FLOAT"),
-    bigquery.SchemaField("infra_score", "FLOAT"),  # lower = more neglected, higher priority
+    bigquery.SchemaField("infra_score", "FLOAT"),  
     bigquery.SchemaField("center_lat", "FLOAT"),
     bigquery.SchemaField("center_lng", "FLOAT"),
 ]
@@ -57,10 +54,7 @@ demo_table = bigquery.Table(demo_table_ref, schema=demo_schema)
 client.create_table(demo_table, exists_ok=True)
 print(f"Table ready: {demo_table_ref}")
 
-# 4. Insert a couple of mock demographic rows so joins have data to work with
-# NOTE: using a load job instead of insert_rows_json() (streaming insert),
-# since streaming inserts require BigQuery billing enabled even for tiny
-# amounts of data. Load jobs are free-tier eligible.
+
 mock_rows = [
     {
         "constituency": "Central District",

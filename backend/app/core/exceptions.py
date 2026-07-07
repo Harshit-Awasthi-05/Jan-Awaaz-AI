@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 class JanAwaazException(HTTPException):
-    """Base exception for the application to ensure consistent structure."""
+    
     def __init__(self, status_code: int, detail: str):
         super().__init__(status_code=status_code, detail=detail)
 

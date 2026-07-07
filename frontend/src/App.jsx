@@ -26,7 +26,7 @@ function RequireCitizen({ children }) {
 
 function RequireMP({ children }) {
   const { mpToken, citizenUser } = useAuth();
-  if (citizenUser) return <Navigate to="/" replace />; // Block active citizens
+  if (citizenUser) return <Navigate to="/" replace />; 
   if (!mpToken) return <Navigate to="/admin/login" replace />;
   return children;
 }

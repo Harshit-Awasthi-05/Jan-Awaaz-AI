@@ -52,7 +52,7 @@ export default function CitizenProfile() {
 
   return (
     <div className="space-y-5">
-      {/* Profile Card */}
+      
       <div className="bg-white rounded-3xl p-5 shadow-card text-center animate-fade-in-up">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2563EB] to-[#14B8A6] flex items-center justify-center text-white text-xl font-bold mx-auto mb-3">
           {getInitials(citizenUser?.displayName)}
@@ -65,7 +65,7 @@ export default function CitizenProfile() {
         </p>
       </div>
 
-      {/* Menu */}
+      
       <div className="space-y-2 stagger-children">
         {menuItems.map((item) => (
           <button
@@ -88,7 +88,7 @@ export default function CitizenProfile() {
         ))}
       </div>
 
-      {/* Sign Out */}
+      
       <button
         onClick={handleSignOut}
         className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl border border-[#EF4444]/20 text-[#EF4444] text-sm font-medium hover:bg-[rgba(239,68,68,0.05)] transition-colors"
