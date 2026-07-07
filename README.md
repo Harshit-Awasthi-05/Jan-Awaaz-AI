@@ -1,4 +1,4 @@
-# 🇮🇳 Jan Awaaz AI --- People's Priorities
+#  Jan Awaaz AI 
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-teal.svg)](https://fastapi.tiangolo.com/)
