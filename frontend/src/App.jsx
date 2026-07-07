@@ -10,6 +10,7 @@ import CitizenTrack from './pages/CitizenTrack';
 import CitizenSubmit from './pages/CitizenSubmit';
 import CitizenUpdates from './pages/CitizenUpdates';
 import CitizenProfile from './pages/CitizenProfile';
+import CitizenNotifications from './pages/CitizenNotifications';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminGrievances from './pages/AdminGrievances';
 import AdminConstituents from './pages/AdminConstituents';
@@ -24,7 +25,8 @@ function RequireCitizen({ children }) {
 }
 
 function RequireMP({ children }) {
-  const { mpToken } = useAuth();
+  const { mpToken, citizenUser } = useAuth();
+  if (citizenUser) return <Navigate to="/" replace />; // Block active citizens
   if (!mpToken) return <Navigate to="/admin/login" replace />;
   return children;
 }
@@ -49,6 +51,7 @@ function AppRoutes() {
         <Route path="/submit" element={<CitizenSubmit />} />
         <Route path="/updates" element={<CitizenUpdates />} />
         <Route path="/profile" element={<CitizenProfile />} />
+        <Route path="/notifications" element={<CitizenNotifications />} />
       </Route>
 
     

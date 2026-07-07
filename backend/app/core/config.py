@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
 
+    TWILIO_ACCOUNT_SID: str
+    TWILIO_AUTH_TOKEN: str
+    TWILIO_VERIFY_SERVICE_SID: str
+    TWILIO_WHATSAPP_NUMBER: str = "+14155238886"  # Twilio sandbox default
+
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("ALLOWED_HOSTS", mode="before")

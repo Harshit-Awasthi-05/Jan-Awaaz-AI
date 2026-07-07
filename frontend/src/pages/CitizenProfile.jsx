@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Shield, Globe, Bell, HelpCircle, LogOut, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -15,6 +16,7 @@ function getInitials(name) {
 
 export default function CitizenProfile() {
   const { citizenUser, citizenToken, citizenLogout } = useAuth();
+  const { language, toggleLanguage } = useLanguage();
   const navigate = useNavigate();
   const [complaintCount, setComplaintCount] = useState(null);
 
@@ -35,11 +37,12 @@ export default function CitizenProfile() {
       description:
         complaintCount === null ? 'Loading...' : `${complaintCount} total filed`,
       color: '#2563EB',
+      onClick: () => navigate('/track'),
     },
-    { icon: Bell, label: 'Notification Settings', description: 'Manage alerts', color: '#14B8A6' },
-    { icon: Globe, label: 'Language', description: 'English', color: '#8B5CF6' },
-    { icon: Shield, label: 'Privacy & Security', description: 'Manage your data', color: '#F59E0B' },
-    { icon: HelpCircle, label: 'Help & Support', description: 'FAQs and contact', color: '#64748B' },
+    { icon: Bell, label: 'Notification Settings', description: 'Manage alerts', color: '#14B8A6', onClick: () => navigate('/notifications') },
+    { icon: Globe, label: 'Language', description: language === 'en' ? 'English' : 'Hindi', color: '#8B5CF6', onClick: toggleLanguage },
+    { icon: Shield, label: 'Privacy & Security', description: 'Manage your data', color: '#F59E0B', onClick: () => alert('Privacy & Security settings are coming soon!') },
+    { icon: HelpCircle, label: 'Help & Support', description: 'FAQs and contact', color: '#64748B', onClick: () => alert('Help & Support module is coming soon!') },
   ];
 
   const handleSignOut = async () => {
@@ -67,7 +70,8 @@ export default function CitizenProfile() {
         {menuItems.map((item) => (
           <button
             key={item.label}
-            className="w-full flex items-center gap-3 bg-white rounded-2xl p-4 shadow-card hover:shadow-dropdown transition-shadow text-left animate-fade-in-up"
+            onClick={item.onClick}
+            className="w-full flex items-center gap-3 bg-white rounded-2xl p-4 shadow-card hover:shadow-dropdown transition-shadow text-left animate-fade-in-up active:scale-[0.99]"
           >
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"

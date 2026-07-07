@@ -14,8 +14,7 @@ function formatRelativeTime(isoString) {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
-// Each complaint becomes a real "update" reflecting its actual current status —
-// no fake notifications, just an activity view built from real backend data.
+
 function buildUpdateFromComplaint(c) {
   if (c.status === 'resolved') {
     return {

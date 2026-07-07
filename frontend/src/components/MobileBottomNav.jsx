@@ -15,8 +15,8 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-[#E2E8F0] z-50 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t-0 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around h-16 max-w-md mx-auto px-2">
         {navItems.map((item) => {
           const isActive =
             item.end
@@ -48,7 +48,7 @@ export default function MobileBottomNav() {
               className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1"
             >
               <div
-                className={`flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200 ${
+                className={`flex items-center justify-center w-16 h-8 rounded-full transition-all duration-200 ${
                   isActive
                     ? 'bg-[#2563EB]/10'
                     : ''

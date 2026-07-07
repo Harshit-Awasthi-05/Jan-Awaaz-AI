@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import StatusChip from '../components/StatusChip';
@@ -41,11 +42,13 @@ export default function CitizenHome() {
     return 'home_good_evening';
   });
 
+  const navigate = useNavigate();
+
   const quickActions = [
-    { icon: FileText, label: t('home_new_complaint'), color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
-    { icon: Clock, label: t('home_track_status'), color: '#14B8A6', bg: 'rgba(20,184,166,0.08)' },
-    { icon: Phone, label: t('home_call_office'), color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)' },
-    { icon: MessageCircle, label: t('home_ai_help'), color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
+    { icon: FileText, label: t('home_new_complaint'), color: '#2563EB', bg: 'rgba(37,99,235,0.08)', to: '/submit' },
+    { icon: Clock, label: t('home_track_status'), color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', to: '/track' },
+    { icon: Phone, label: t('home_call_office'), color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)', to: 'tel:1800111234' },
+    { icon: MessageCircle, label: t('home_ai_help'), color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', to: '/updates' },
   ];
 
   useEffect(() => {
@@ -100,10 +103,11 @@ export default function CitizenHome() {
       </div>
 
 
-      <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-3xl p-5 text-white animate-fade-in-up">
-        <div className="flex items-center gap-2 mb-3">
-          <SparkleIcon className="w-5 h-5" />
-          <span className="text-xs font-semibold text-[#14B8A6] tracking-wide uppercase">
+      <div className="glass-panel relative overflow-hidden rounded-[24px] p-6 text-white animate-fade-in-up border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#1E293B] opacity-90 -z-10" />
+        <div className="flex items-center gap-2 mb-4">
+          <SparkleIcon className="w-5 h-5 ai-gradient" />
+          <span className="text-xs font-bold ai-gradient tracking-widest uppercase">
             {t('home_ai_summary')}
           </span>
         </div>
@@ -134,19 +138,25 @@ export default function CitizenHome() {
         <h2 className="text-sm font-semibold text-[#0F172A] mb-3 tracking-tight">
           {t('home_quick_actions')}
         </h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (
             <button
               key={action.label}
-              className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white shadow-card hover:shadow-dropdown active:scale-95 transition-all group"
+              onClick={() =>
+                action.to.startsWith('tel:')
+                  ? (window.location.href = action.to)
+                  : navigate(action.to)
+              }
+              className="flex flex-col items-center gap-3 p-4 rounded-[20px] glass-panel transition-all duration-300 hover:-translate-y-1 hover:shadow-dropdown active:scale-95 group relative overflow-hidden"
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                className="w-12 h-12 rounded-[14px] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm"
                 style={{ backgroundColor: action.bg }}
               >
-                <action.icon className="w-5 h-5" style={{ color: action.color }} />
+                <action.icon className="w-6 h-6" style={{ color: action.color }} />
               </div>
-              <span className="text-[10px] font-medium text-[#475569] text-center leading-tight">
+              <span className="text-xs font-semibold text-[#1E293B] text-center">
                 {action.label}
               </span>
             </button>
@@ -156,17 +166,17 @@ export default function CitizenHome() {
 
 
       <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
-        <div className="bg-white rounded-2xl p-3 shadow-card text-center">
-          <p className="text-lg font-bold text-[#2563EB]">{totalFiled}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_total_filed')}</p>
+        <div className="glass-panel rounded-[20px] p-4 text-center transition-transform hover:-translate-y-1 hover:shadow-dropdown">
+          <p className="text-2xl font-bold text-[#2563EB] mb-1">{totalFiled}</p>
+          <p className="text-xs text-[#64748B] font-semibold uppercase tracking-wider">{t('home_total_filed')}</p>
         </div>
-        <div className="bg-white rounded-2xl p-3 shadow-card text-center">
-          <p className="text-lg font-bold text-[#14B8A6]">{inProgressCount}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_in_progress')}</p>
+        <div className="glass-panel rounded-[20px] p-4 text-center transition-transform hover:-translate-y-1 hover:shadow-dropdown">
+          <p className="text-2xl font-bold text-[#14B8A6] mb-1">{inProgressCount}</p>
+          <p className="text-xs text-[#64748B] font-semibold uppercase tracking-wider">{t('home_in_progress')}</p>
         </div>
-        <div className="bg-white rounded-2xl p-3 shadow-card text-center">
-          <p className="text-lg font-bold text-[#22C55E]">{resolvedCount}</p>
-          <p className="text-[10px] text-[#64748B] font-medium mt-0.5">{t('home_resolved')}</p>
+        <div className="glass-panel rounded-[20px] p-4 text-center transition-transform hover:-translate-y-1 hover:shadow-dropdown">
+          <p className="text-2xl font-bold text-[#22C55E] mb-1">{resolvedCount}</p>
+          <p className="text-xs text-[#64748B] font-semibold uppercase tracking-wider">{t('home_resolved')}</p>
         </div>
       </div>
 
@@ -176,7 +186,9 @@ export default function CitizenHome() {
           <h2 className="text-sm font-semibold text-[#0F172A] tracking-tight">
             {t('home_recent_grievances')}
           </h2>
-          <button className="text-xs font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-colors">
+          <button 
+            onClick={() => navigate('/track')}
+            className="text-xs font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-colors">
             {t('home_view_all')}
           </button>
         </div>
@@ -195,6 +207,7 @@ export default function CitizenHome() {
           {recentGrievances.map((g) => (
             <div
               key={g.complaint_id}
+              onClick={() => navigate('/track')}
               className="bg-white rounded-2xl p-4 shadow-card hover:shadow-dropdown transition-shadow active:scale-[0.99] cursor-pointer"
             >
               <div className="flex items-start justify-between">

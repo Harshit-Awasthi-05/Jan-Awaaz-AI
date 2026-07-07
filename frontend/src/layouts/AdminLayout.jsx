@@ -16,7 +16,7 @@ export default function AdminLayout() {
         }`}
       >
         {/* Top Header */}
-        <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-[#E2E8F0] flex items-center justify-between px-6">
+        <header className="sticky top-0 z-30 h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-6">
           <div>
             <h1 className="text-lg font-semibold text-[#0F172A] tracking-tight">
               MP Dashboard

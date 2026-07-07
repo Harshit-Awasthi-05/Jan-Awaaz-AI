@@ -5,9 +5,12 @@ from app.core.config import settings
 from app.core.logger import log
 from firebase_admin import auth
 import os
+from dotenv import load_dotenv
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from twilio.rest import Client as TwilioClient
+
+load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_scheme = HTTPBearer()

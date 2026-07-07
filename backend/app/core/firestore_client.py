@@ -1,3 +1,4 @@
+
 from google.cloud import firestore
 from google.oauth2 import service_account
 from app.core.config import settings

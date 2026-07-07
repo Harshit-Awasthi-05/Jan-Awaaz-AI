@@ -11,7 +11,7 @@ function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 }
 
-// Maps our backend's actual status values to the StatusChip's expected labels
+
 function toChipStatus(status) {
   if (status === 'resolved') return 'resolved';
   if (status === 'in_progress') return 'assigned';
