@@ -37,7 +37,8 @@ async def verify_citizen_otp_endpoint(payload: PhoneOtpVerify):
 
     uid = get_or_create_citizen_uid(payload.phone_number)
 
-    if payload.name:
+    user_record = firebase_auth.get_user(uid)
+    if payload.name and not user_record.display_name:
         firebase_auth.update_user(uid, display_name=payload.name)
 
     custom_token = firebase_auth.create_custom_token(uid).decode("utf-8")
