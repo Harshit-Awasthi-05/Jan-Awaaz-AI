@@ -7,6 +7,7 @@ import { useLanguage } from "../context/LanguageContext";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 export default function CitizenLogin() {
+  const [mode, setMode] = useState("login"); // "login" | "signup"
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -37,9 +38,10 @@ export default function CitizenLogin() {
       const res = await fetch(`${API_BASE}/citizen/request-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone_number: fullNumber }),
+        body: JSON.stringify({ phone_number: fullNumber, is_signup: mode === "signup" }),
       });
-      if (!res.ok) throw new Error("Failed to send OTP. Try again.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to send OTP. Try again.");
       setStep("otp");
     } catch (err) {
       setError(err.message);
@@ -81,8 +83,12 @@ export default function CitizenLogin() {
         >
           {language === 'en' ? 'हिं' : 'EN'}
         </button>
-        <h1 className="text-lg font-bold text-[#0F172A] mb-1">{t('login_title')}</h1>
-        <p className="text-xs text-[#64748B] mb-5">{t('login_subtitle')}</p>
+        <h1 className="text-lg font-bold text-[#0F172A] mb-1">
+          {mode === "login" ? t('login_title') : "Sign Up"}
+        </h1>
+        <p className="text-xs text-[#64748B] mb-5">
+          {mode === "login" ? t('login_subtitle') : "Create an account to track your grievances."}
+        </p>
 
         {error && (
           <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
@@ -92,19 +98,21 @@ export default function CitizenLogin() {
 
         {step === "phone" && (
           <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
-                {t('login_name_label')}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t('login_name_placeholder')}
-                required
-                className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
-              />
-            </div>
+            {mode === "signup" && (
+              <div>
+                <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
+                  {t('login_name_label')}
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('login_name_placeholder')}
+                  required
+                  className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+                />
+              </div>
+            )}
             <div>
               <label className="text-xs font-semibold text-[#475569] mb-1.5 block">
                 {t('login_phone_label')}
@@ -125,6 +133,21 @@ export default function CitizenLogin() {
             >
               {loading ? t('login_sending') : t('login_send_otp')}
             </button>
+
+            <div className="text-center mt-4 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "login" ? "signup" : "login");
+                  setError("");
+                }}
+                className="text-xs text-[#2563EB] font-semibold hover:underline"
+              >
+                {mode === "login"
+                  ? "Don't have an account? Sign Up"
+                  : "Already have an account? Log In"}
+              </button>
+            </div>
           </form>
         )}
 
