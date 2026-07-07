@@ -1,6 +1,32 @@
-import { User, Bell, Shield, Globe, Palette, Save } from 'lucide-react';
+import { useState } from 'react';
+import { User, Bell, Save } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminSettings() {
+  const { mpInfo } = useAuth();
+
+  const [name, setName] = useState(mpInfo?.name || '');
+  const [email, setEmail] = useState(mpInfo?.email || mpInfo?.sub || '');
+  const [constituency, setConstituency] = useState(mpInfo?.constituency || '');
+  const [phone, setPhone] = useState(mpInfo?.phone || '');
+
+  const [notifications, setNotifications] = useState({
+    emailNew: true,
+    smsHigh: true,
+    weeklyDigest: false,
+    aiInsights: true,
+  });
+
+  const toggleNotification = (key) =>
+    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const notificationItems = [
+    { key: 'emailNew', label: 'Email notifications for new grievances' },
+    { key: 'smsHigh', label: 'SMS alerts for high priority issues' },
+    { key: 'weeklyDigest', label: 'Weekly digest report' },
+    { key: 'aiInsights', label: 'AI insight notifications' },
+  ];
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="animate-fade-in-up">
@@ -16,19 +42,39 @@ export default function AdminSettings() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Full Name</label>
-            <input type="text" defaultValue="Shri Rajesh Sharma" className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]" />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Email</label>
-            <input type="email" defaultValue="mp.rajesh@parliament.in" className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Constituency</label>
-            <input type="text" defaultValue="New Delhi South" className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]" />
+            <input
+              type="text"
+              value={constituency}
+              onChange={(e) => setConstituency(e.target.value)}
+              className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-[#475569] mb-1.5 block">Phone</label>
-            <input type="tel" defaultValue="+91 99XXX XXXXX" className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-2.5 text-sm bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
+            />
           </div>
         </div>
       </div>
@@ -39,17 +85,16 @@ export default function AdminSettings() {
           <Bell className="w-4 h-4 text-[#14B8A6]" /> Notifications
         </h3>
         <div className="space-y-3">
-          {[
-            { label: 'Email notifications for new grievances', checked: true },
-            { label: 'SMS alerts for high priority issues', checked: true },
-            { label: 'Weekly digest report', checked: false },
-            { label: 'AI insight notifications', checked: true },
-          ].map((item) => (
-            <label key={item.label} className="flex items-center justify-between py-1 cursor-pointer group">
+          {notificationItems.map((item) => (
+            <label key={item.key} className="flex items-center justify-between py-1 cursor-pointer group">
               <span className="text-sm text-[#475569] group-hover:text-[#0F172A] transition-colors">{item.label}</span>
-              <div className={`relative w-10 h-5 rounded-full transition-colors ${item.checked ? 'bg-[#2563EB]' : 'bg-[#CBD5E1]'}`}>
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${item.checked ? 'left-5' : 'left-0.5'}`} />
-              </div>
+              <button
+                type="button"
+                onClick={() => toggleNotification(item.key)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${notifications[item.key] ? 'bg-[#2563EB]' : 'bg-[#CBD5E1]'}`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${notifications[item.key] ? 'left-5' : 'left-0.5'}`} />
+              </button>
             </label>
           ))}
         </div>

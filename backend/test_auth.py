@@ -1,5 +1,6 @@
 import httpx
 import time
+import os
 
 BASE_URL = "http://localhost:8000"
 
@@ -8,9 +9,9 @@ def test_mp_flow():
     
     # 1. Initiate Login
     login_payload = {
-        "email": "mp@janawaaz.in",
-        "constituency": "Central District",
-        "password": "hackathon2026"
+        "email": os.environ.get("MP_EMAIL", "mp@janawaaz.in"),
+        "constituency": os.environ.get("MP_CONSTITUENCY", "Jan Awaaz Constituency"),
+        "password": os.environ.get("MP_PASSWORD", "hackathon2026")
     }
     print("1. Sending Login Credentials...")
     login_res = httpx.post(f"{BASE_URL}/api/v1/mp/login", json=login_payload)

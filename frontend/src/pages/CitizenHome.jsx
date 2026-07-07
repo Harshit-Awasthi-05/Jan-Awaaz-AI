@@ -32,6 +32,7 @@ export default function CitizenHome() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [constituencyInfo, setConstituencyInfo] = useState(null);
 
   const [greetingKey] = useState(() => {
     const h = new Date().getHours();
@@ -65,7 +66,20 @@ export default function CitizenHome() {
       }
     }
 
+    // Fetch public constituency info so the card shows real data
+    async function fetchConstituencyInfo() {
+      try {
+        const res = await fetch(`${API_BASE}/mp/info`);
+        if (res.ok) {
+          const data = await res.json();
+          setConstituencyInfo(data);
+        }
+      } catch {
+      }
+    }
+
     fetchComplaints();
+    fetchConstituencyInfo();
   }, [citizenToken]);
 
   
@@ -73,12 +87,11 @@ export default function CitizenHome() {
   const resolvedCount = complaints.filter((c) => c.status === 'resolved').length;
   const inProgressCount = totalFiled - resolvedCount;
 
-  const mostRecent = complaints[0]; // already sorted newest-first by the backend
+  const mostRecent = complaints[0];
   const recentGrievances = complaints.slice(0, 3);
 
   return (
     <div className="space-y-5 stagger-children">
-      {/* Greeting */}
       <div className="animate-fade-in-up">
         <p className="text-sm text-[#64748B] font-medium">{t(greetingKey)}</p>
         <h1 className="text-xl font-bold text-[#0F172A] tracking-tight mt-0.5">
@@ -86,7 +99,7 @@ export default function CitizenHome() {
         </h1>
       </div>
 
-      {/* AI Summary Card */}
+
       <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-3xl p-5 text-white animate-fade-in-up">
         <div className="flex items-center gap-2 mb-3">
           <SparkleIcon className="w-5 h-5" />
@@ -116,7 +129,7 @@ export default function CitizenHome() {
         </button>
       </div>
 
-      {/* Quick Actions */}
+
       <div className="animate-fade-in-up">
         <h2 className="text-sm font-semibold text-[#0F172A] mb-3 tracking-tight">
           {t('home_quick_actions')}
@@ -141,7 +154,7 @@ export default function CitizenHome() {
         </div>
       </div>
 
-      {/* Stats Row */}
+
       <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
         <div className="bg-white rounded-2xl p-3 shadow-card text-center">
           <p className="text-lg font-bold text-[#2563EB]">{totalFiled}</p>
@@ -157,7 +170,7 @@ export default function CitizenHome() {
         </div>
       </div>
 
-      {/* Recent Grievances */}
+
       <div className="animate-fade-in-up">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-[#0F172A] tracking-tight">
@@ -208,9 +221,6 @@ export default function CitizenHome() {
         </div>
       </div>
 
-      {/* Constituency Info */}
-      {/* NOTE: still static placeholder data — the backend doesn't yet resolve
-          a citizen's constituency automatically from location. */}
       <div className="bg-white rounded-3xl p-5 shadow-card animate-fade-in-up">
         <h2 className="text-sm font-semibold text-[#0F172A] mb-3 tracking-tight">
           {t('home_your_constituency')}
@@ -220,12 +230,14 @@ export default function CitizenHome() {
             <MapPin className="w-5 h-5 text-[#2563EB]" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#0F172A]">New Delhi South</p>
+            <p className="text-sm font-semibold text-[#0F172A]">
+              {constituencyInfo?.constituency || t('home_your_constituency')}
+            </p>
             <p className="text-xs text-[#64748B] mt-0.5">
-              MP: Shri Rajesh Sharma
+              {constituencyInfo?.mp_name ? `MP: ${constituencyInfo.mp_name}` : 'Jan Awaaz AI'}
             </p>
             <p className="text-xs text-[#94A3B8] mt-0.5">
-              Ward 42 • Block C, Sector 15
+              Jan Awaaz AI Constituency
             </p>
           </div>
         </div>

@@ -51,4 +51,12 @@ async def mp_verify_otp(request: OTPRequest):
 
     access_token = create_access_token(data=token_payload)
 
-    return {"status": "success", "access_token": access_token, "token_type": "bearer"}
+    return {
+        "status": "success",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "mp_name": user["name"],
+        "mp_email": request.email,
+        "mp_constituency": user["constituency"],
+        "mp_phone": user.get("phone", ""),
+    }

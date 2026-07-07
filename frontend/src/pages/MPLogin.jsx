@@ -51,7 +51,13 @@ export default function MPLogin() {
       if (!res.ok) {
         throw new Error(data.detail || "Invalid OTP");
       }
-      mpLogin(data.access_token, { email, constituency });
+      mpLogin(data.access_token, {
+        name: data.mp_name,
+        email: data.mp_email,
+        constituency: data.mp_constituency,
+        phone: data.mp_phone,
+        sub: data.mp_email,
+      });
       navigate("/admin");
     } catch (err) {
       setError(err.message);

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-import random
+
 from firebase_admin import auth as firebase_auth
-from app.core.security import verify_citizen_token, store_otp, check_otp
+from app.core.security import verify_citizen_token, send_citizen_otp, verify_citizen_otp
 from app.core.firebase import get_or_create_citizen_uid
 from app.core.logger import log
 from app.api.complaints.services import get_complaints_by_citizen
@@ -23,16 +23,16 @@ class PhoneOtpVerify(BaseModel):
 
 @router.post("/request-otp")
 async def request_citizen_otp(payload: PhoneOtpRequest):
+    success = send_citizen_otp(payload.phone_number)
+    if not success:
+        raise HTTPException(status_code=502, detail="Failed to send OTP. Please try again.")
+    return {"status": "pending_verification", "message": "OTP sent to your phone number."}
    
-    otp = str(random.randint(100000, 999999))
-    store_otp(payload.phone_number, otp)
-    log.info(f"Citizen OTP {otp} generated for {payload.phone_number}")
-    return {"status": "pending_verification", "message": "OTP generated (check server logs for demo)."}
-
+   
 
 @router.post("/verify-otp")
-async def verify_citizen_otp(payload: PhoneOtpVerify):
-    if not check_otp(payload.phone_number, payload.otp):
+async def verify_citizen_otp_endpoint(payload: PhoneOtpVerify):
+    if not verify_citizen_otp(payload.phone_number, payload.otp):
         raise HTTPException(status_code=401, detail="Invalid or expired OTP.")
 
     uid = get_or_create_citizen_uid(payload.phone_number)

@@ -13,11 +13,18 @@ class ProcessingResponse(BaseModel):
     extracted_data: Optional[Dict[str, Any]] = Field(None, description="The structural JSON payload resolved from Gemini.")
 
 class WhatsAppWebhookPayload(BaseModel):
-    from_number: str
-    message_type: str 
-    text_body: Optional[str] = None
-    media_url: Optional[str] = None
-    timestamp: str
+    from_number: str = Field(..., alias="From")         
+    to_number: str = Field(..., alias="To")             
+    body: Optional[str] = Field(None, alias="Body")     #
+    num_media: int = Field(0, alias="NumMedia")         
+    media_url_0: Optional[str] = Field(None, alias="MediaUrl0")
+    media_content_type_0: Optional[str] = Field(None, alias="MediaContentType0")
+    message_sid: Optional[str] = Field(None, alias="MessageSid")
+    account_sid: Optional[str] = Field(None, alias="AccountSid")
+    sms_sid: Optional[str] = Field(None, alias="SmsSid")
+    profile_name: Optional[str] = Field(None, alias="ProfileName")
+
+    model_config = {"populate_by_name": True}
 
 class CitizenAppPayload(BaseModel):
     citizen_id: str
@@ -25,5 +32,5 @@ class CitizenAppPayload(BaseModel):
     longitude: float
     category: Optional[str] = None
     description: Optional[str] = None
-    constituency: Optional[str] = "Central District" 
+    constituency: Optional[str] = None
     language: Optional[str] = "en"

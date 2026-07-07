@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Camera,
@@ -31,11 +31,12 @@ export default function CitizenSubmit() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  const [mpConstituency, setMpConstituency] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
-  const [location, setLocation] = useState(null); // { latitude, longitude }
-  const [locationStatus, setLocationStatus] = useState('idle'); // idle | detecting | done | error
+  const [location, setLocation] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('idle');
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -65,6 +66,13 @@ export default function CitizenSubmit() {
     if (file) setPhotoFile(file);
   };
 
+  useEffect(() => {
+    fetch(`${API_BASE}/mp/info`)
+      .then((res) => res.json())
+      .then((data) => setMpConstituency(data.constituency || ''))
+      .catch(() => {});
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
@@ -87,6 +95,7 @@ export default function CitizenSubmit() {
       if (category) formData.append('category', category);
       if (description) formData.append('description', description);
       formData.append('language', language);
+      if (mpConstituency) formData.append('constituency', mpConstituency);
 
       const res = await fetch(`${API_BASE}/ingestion/app-upload`, {
         method: 'POST',
@@ -136,7 +145,6 @@ export default function CitizenSubmit() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Category */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
             {t('submit_category_label')}
@@ -158,7 +166,6 @@ export default function CitizenSubmit() {
           </div>
         </div>
 
-        {/* Description */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
             {t('submit_description_label')}
@@ -175,7 +182,6 @@ export default function CitizenSubmit() {
           />
         </div>
 
-        {/* Location */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
             {t('submit_location_label')} <span className="text-red-500">*</span>
@@ -202,7 +208,6 @@ export default function CitizenSubmit() {
           </button>
         </div>
 
-        {/* Attachments */}
         <div>
           <label className="text-xs font-semibold text-[#475569] mb-1.5 block tracking-wide">
             {t('submit_photo_label')} <span className="text-red-500">*</span>
@@ -240,7 +245,6 @@ export default function CitizenSubmit() {
           </div>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={submitting}

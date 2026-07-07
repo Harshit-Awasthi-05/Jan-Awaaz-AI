@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Literal
@@ -10,6 +11,14 @@ from app.core.firestore_client import get_db
 from app.core.logger import log
 
 router = APIRouter(prefix="/mp", tags=["MP Dashboard"])
+
+
+@router.get("/info")
+async def get_mp_info():
+    return {
+        "mp_name": os.environ.get("MP_NAME", "Jan Awaaz MP"),
+        "constituency": os.environ.get("MP_CONSTITUENCY", "Jan Awaaz Constituency"),
+    }
 
 PRIORITY_QUERY = """
 SELECT
@@ -81,7 +90,6 @@ async def list_all_complaints(mp: dict = Depends(get_current_mp)):
 
 @router.get("/dashboard/constituents")
 async def list_constituents(mp: dict = Depends(get_current_mp)):
-    
     db = get_db()
     docs = db.collection("complaints").stream()
 
@@ -160,7 +168,6 @@ async def get_dashboard_overview(mp: dict = Depends(get_current_mp)):
     resolved_count = sum(1 for c in complaints if c.get("status") == "resolved")
     active_citizens = len({c.get("citizen_uid") for c in complaints if c.get("citizen_uid")})
 
-    # Category breakdown
     category_counts = defaultdict(int)
     for c in complaints:
         category_counts[c.get("category") or "Uncategorized"] += 1
@@ -173,14 +180,11 @@ async def get_dashboard_overview(mp: dict = Depends(get_current_mp)):
         for name, count in sorted(category_counts.items(), key=lambda x: -x[1])
     ]
 
-    # Status distribution
     status_counts = defaultdict(int)
     for c in complaints:
         status_counts[c.get("status") or "submitted"] += 1
     status_distribution = [{"name": k, "value": v} for k, v in status_counts.items()]
 
-    # Weekly activity — last 7 days, real dates, real counts (will be sparse
-    # if the app has only been live for a short time — that's honest, not a bug)
     today = datetime.now(timezone.utc).date()
     day_buckets = {(today - timedelta(days=i)): {"filed": 0, "resolved": 0} for i in range(6, -1, -1)}
 

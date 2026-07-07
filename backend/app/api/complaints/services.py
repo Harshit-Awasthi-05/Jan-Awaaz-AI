@@ -1,6 +1,7 @@
-﻿import uuid
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
+from google.cloud import bigquery
 from app.core.firestore_client import get_db
 from app.core.bigquery_client import get_bq_client
 from app.core.logger import log
@@ -8,7 +9,7 @@ from app.core.logger import log
 
 def create_complaint(
     citizen_uid: str,
-    channel: str,  # "app" or "whatsapp"
+    channel: str,
     category: Optional[str],
     severity: Optional[str],
     summary: Optional[str],
@@ -16,9 +17,8 @@ def create_complaint(
     media_url: Optional[str],
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
-    constituency: Optional[str] = "Central District",  
+    constituency: Optional[str] = None,
 ) -> str:
-    
     db = get_db()
     complaint_id = str(uuid.uuid4())[:8]
     created_at = datetime.now(timezone.utc)
@@ -58,8 +58,6 @@ def create_complaint(
             "status": "submitted",
             "created_at": created_at.isoformat(),
         }
-        
-        from google.cloud import bigquery
         job_config = bigquery.LoadJobConfig(
             write_disposition="WRITE_APPEND",
             source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,

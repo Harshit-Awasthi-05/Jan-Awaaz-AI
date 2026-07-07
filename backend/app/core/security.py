@@ -2,16 +2,25 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+from app.core.logger import log
 from firebase_admin import auth
+import os
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from twilio.rest import Client as TwilioClient
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_scheme = HTTPBearer()
 
+
+_twilio_client = TwilioClient(
+    settings.TWILIO_ACCOUNT_SID,
+    settings.TWILIO_AUTH_TOKEN,
+)
+
+
 OTP_TTL_MINUTES = 5
 OTP_MAX_ATTEMPTS = 5
-
 
 otp_storage: dict = {}
 
@@ -24,14 +33,23 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-GOVT_DATABASE = {
-    "mp@janawaaz.in": {
-        "name": "Honorable MP",
-        "constituency": "Central District",
-        "phone": "+919876543210",
-        "password_hash": get_password_hash("hackathon2026"),
+def _build_govt_database() -> dict:
+    email = os.environ.get("MP_EMAIL", "mp@janawaaz.in")
+    name = os.environ.get("MP_NAME", "Jan Awaaz MP")
+    constituency = os.environ.get("MP_CONSTITUENCY", "Jan Awaaz Constituency")
+    phone = os.environ.get("MP_PHONE", "+910000000000")
+    password = os.environ.get("MP_PASSWORD", "hackathon2026")
+    return {
+        email: {
+            "name": name,
+            "constituency": constituency,
+            "phone": phone,
+            "password_hash": get_password_hash(password),
+        }
     }
-}
+
+
+GOVT_DATABASE = _build_govt_database()
 
 
 def create_access_token(data: dict) -> str:
@@ -50,7 +68,6 @@ def store_otp(email: str, otp: str) -> None:
 
 
 def check_otp(email: str, submitted_otp: str) -> bool:
-    """Returns True if valid. Deletes the OTP record on success or exhausted attempts."""
     record = otp_storage.get(email)
     if not record:
         return False
@@ -71,6 +88,39 @@ def check_otp(email: str, submitted_otp: str) -> bool:
     return True
 
 
+def send_citizen_otp(phone_number: str) -> bool:
+    try:
+        verification = (
+            _twilio_client.verify.v2
+            .services(settings.TWILIO_VERIFY_SERVICE_SID)
+            .verifications.create(to=phone_number, channel="sms")
+        )
+        log.info(
+            f"Twilio OTP dispatched to {phone_number}, status={verification.status}"
+        )
+        return verification.status == "pending"
+    except Exception as e:
+        log.error(f"Twilio OTP send failed for {phone_number}: {e}")
+        return False
+
+
+def verify_citizen_otp(phone_number: str, code: str) -> bool:
+    try:
+        check = (
+            _twilio_client.verify.v2
+            .services(settings.TWILIO_VERIFY_SERVICE_SID)
+            .verification_checks.create(to=phone_number, code=code)
+        )
+        approved = check.status == "approved"
+        log.info(
+            f"Twilio OTP verify for {phone_number}: status={check.status}"
+        )
+        return approved
+    except Exception as e:
+        log.error(f"Twilio OTP verify failed for {phone_number}: {e}")
+        return False
+
+
 async def verify_citizen_token(
     authorization: HTTPAuthorizationCredentials = Security(security_scheme),
 ) -> str:
@@ -87,7 +137,6 @@ async def verify_citizen_token(
 async def get_current_mp(
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
 ) -> dict:
-    
     token = credentials.credentials
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
