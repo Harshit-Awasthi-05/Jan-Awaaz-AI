@@ -50,7 +50,7 @@ analysis, grievance management, and constituency planning.
 
 1.  **Collect** citizen grievances through a mobile-first web
     application and WhatsApp Business integration.
-2.  **Authenticate** citizens using phone-based OTP verification without
+2.  **Authenticate** citizens natively using Firebase Phone Authentication without
     requiring email accounts or passwords.
 3.  **Analyze** text and images with Gemini 2.5 Flash to extract
     category, severity, summary, and actionable insight.
@@ -191,11 +191,9 @@ through WhatsApp. The backend receives the webhook, downloads the media,
 identifies the citizen, runs AI analysis, stores the complaint, and
 sends an automatic confirmation.
 
-### Phone-Based Passwordless Authentication
+### Native Phone-Based Authentication
 
-Citizens authenticate using a phone number and OTP through Twilio
-Verify. The flow removes the need for email accounts and passwords,
-making the platform more accessible for rural and low-literacy users.
+Citizens authenticate using a phone number and OTP natively through Firebase Phone Authentication. The flow runs directly on the frontend, removing the need for email accounts and passwords, making the platform fast and accessible for rural and low-literacy users.
 
 ### Real-Time MP Dashboard
 
@@ -230,13 +228,15 @@ Citizens who submit grievances are aggregated into a constituent
 directory with complaint counts, activity information, and identity data
 cross-referenced with Firebase Authentication records.
 
-### Status Tracking
+### Status Tracking and Interactive Mapping
 
 Citizens can track grievance progress through the lifecycle:
 
 ``` text
 submitted → in_progress → resolved
 ```
+
+Clicking on any tracked grievance opens a detailed interactive modal displaying the AI-generated summary, the attached image, and an embedded Google Map that pinpoints the exact coordinates of the submitted issue.
 
 ### Geolocation Capture
 
@@ -274,12 +274,11 @@ support.
                                                   analysis and generated
                                                   insights
 
-  Citizen Authentication  Firebase Auth + Twilio  Passwordless phone OTP
-                          Verify                  and Firebase custom
-                                                  tokens
+  Citizen Authentication  Firebase Phone Auth     Native passwordless phone
+                                                  OTP directly on frontend
 
-  MP Authentication       Firestore + PyJWT +     Hashed credentials and
-                          bcrypt                  JWT sessions
+  MP Authentication       Firestore + PyJWT +     Hashed credentials + Twilio
+                          bcrypt                  MFA and JWT sessions
 
   Database                Cloud Firestore         Live grievance,
                                                   citizen, and MP records
@@ -292,7 +291,7 @@ support.
                                                   storage and CDN
                                                   delivery
 
-  Messaging               Twilio                  SMS OTP and WhatsApp
+  Messaging               Twilio                  MP Login MFA and WhatsApp
                                                   Business integration
 
   Deployment              Docker Compose, Nginx   Containerized
@@ -370,21 +369,20 @@ sequenceDiagram
     autonumber
     actor Citizen
     participant FE as React Frontend
-    participant API as FastAPI Backend
-    participant Twilio as Twilio Verify
     participant Firebase as Firebase Auth
+    participant API as FastAPI Backend
 
     Citizen->>FE: Enter phone number
-    FE->>API: Request OTP
-    API->>Twilio: Send verification code
-    Twilio-->>Citizen: Deliver OTP
+    FE->>Firebase: signInWithPhoneNumber()
+    Firebase-->>Citizen: Deliver SMS OTP
     Citizen->>FE: Enter OTP
-    FE->>API: Verify OTP
-    API->>Twilio: Validate code
-    Twilio-->>API: Verification approved
-    API->>Firebase: Resolve/create citizen identity
-    Firebase-->>API: Return authentication identity
-    API-->>FE: Return authenticated session
+    FE->>Firebase: confirm(otp)
+    Firebase-->>FE: Return authenticated session (ID Token)
+    
+    opt If First Time Signup
+        FE->>API: POST /citizen/sync-profile (with Token)
+        API->>Firebase: Update user profile (name)
+    end
 ```
 
 ### MP Priority Ranking
@@ -701,9 +699,7 @@ curl \
 
 ## Security
 
--   Firebase Web API keys may appear in frontend configuration because
-    access control is enforced through Firebase Security Rules and API
-    restrictions.
+-   Firebase Web API keys are safely exposed to the frontend as they are required for native Firebase Phone Auth. Access must be restricted via Firebase Security Rules and domain whitelisting.
 -   Gemini credentials, Twilio credentials, Cloudinary secrets, JWT
     secrets, and service-account files must remain backend-only.
 -   MP passwords are stored as bcrypt hashes and never as plaintext.
