@@ -11,52 +11,22 @@ from app.api.complaints.services import get_complaints_by_citizen
 router = APIRouter(prefix="/citizen", tags=["Citizen Reporting"])
 
 
-class PhoneOtpRequest(BaseModel):
-    phone_number: str  # E.164 format, e.g. +919876543210
-    is_signup: bool
+class SyncProfileRequest(BaseModel):
+    name: str
 
-
-class PhoneOtpVerify(BaseModel):
-    phone_number: str
-    otp: str
-    name: Optional[str] = None
-
-
-@router.post("/request-otp")
-async def request_citizen_otp(payload: PhoneOtpRequest):
+@router.post("/sync-profile")
+async def sync_citizen_profile(
+    payload: SyncProfileRequest,
+    citizen_uid: str = Depends(verify_citizen_token)
+):
     try:
-        user = firebase_auth.get_user_by_phone_number(payload.phone_number)
-        user_exists = True
-    except firebase_auth.UserNotFoundError:
-        user_exists = False
-
-    if payload.is_signup and user_exists:
-        raise HTTPException(status_code=400, detail="User already exists. Please log in.")
-    
-    if not payload.is_signup and not user_exists:
-        raise HTTPException(status_code=404, detail="User not found. Please sign up first.")
-
-    success = send_citizen_otp(payload.phone_number)
-    if not success:
-        raise HTTPException(status_code=502, detail="Failed to send OTP. Please try again.")
-    return {"status": "pending_verification", "message": "OTP sent to your phone number."}
-   
-   
-
-@router.post("/verify-otp")
-async def verify_citizen_otp_endpoint(payload: PhoneOtpVerify):
-    if not verify_citizen_otp(payload.phone_number, payload.otp):
-        raise HTTPException(status_code=401, detail="Invalid or expired OTP.")
-
-    uid = get_or_create_citizen_uid(payload.phone_number)
-
-    user_record = firebase_auth.get_user(uid)
-    if payload.name and not user_record.display_name:
-        firebase_auth.update_user(uid, display_name=payload.name)
-
-    custom_token = firebase_auth.create_custom_token(uid).decode("utf-8")
-
-    return {"status": "success", "custom_token": custom_token, "uid": uid}
+        user_record = firebase_auth.get_user(citizen_uid)
+        if payload.name and not user_record.display_name:
+            firebase_auth.update_user(citizen_uid, display_name=payload.name)
+        return {"status": "success", "message": "Profile synced successfully"}
+    except Exception as e:
+        log.error(f"Failed to sync profile for {citizen_uid}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to sync profile.")
 
 
 @router.get("/complaints")

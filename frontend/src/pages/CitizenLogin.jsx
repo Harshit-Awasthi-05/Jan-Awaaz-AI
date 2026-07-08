@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithCustomToken } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebase";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -29,22 +29,33 @@ export default function CitizenLogin() {
     return `+91${tenDigits}`;
   };
 
+  useEffect(() => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: (response) => {
+          // reCAPTCHA solved
+        },
+        'expired-callback': () => {
+          setError("Recaptcha expired, please try again.");
+        }
+      });
+    }
+  }, []);
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       const fullNumber = normalizePhone(phone);
-      const res = await fetch(`${API_BASE}/citizen/request-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone_number: fullNumber, is_signup: mode === "signup" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to send OTP. Try again.");
+      const appVerifier = window.recaptchaVerifier;
+      const confirmationResult = await signInWithPhoneNumber(auth, fullNumber, appVerifier);
+      window.confirmationResult = confirmationResult;
       setStep("otp");
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.message || "Failed to send OTP. Try again.");
     } finally {
       setLoading(false);
     }
@@ -55,19 +66,24 @@ export default function CitizenLogin() {
     setError("");
     setLoading(true);
     try {
-      const fullNumber = normalizePhone(phone);
-      const res = await fetch(`${API_BASE}/citizen/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone_number: fullNumber, otp, name: name || null }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Invalid OTP.");
-
-      await signInWithCustomToken(auth, data.custom_token);
+      const result = await window.confirmationResult.confirm(otp);
+      
+      if (mode === "signup" && name) {
+        const idToken = await result.user.getIdToken();
+        await fetch(`${API_BASE}/citizen/sync-profile`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ name }),
+        });
+      }
+      
       navigate("/");
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.message || "Invalid OTP.");
     } finally {
       setLoading(false);
     }
@@ -95,6 +111,8 @@ export default function CitizenLogin() {
             {error}
           </div>
         )}
+
+        <div id="recaptcha-container"></div>
 
         {step === "phone" && (
           <form onSubmit={handleSendOtp} className="space-y-4">
@@ -161,7 +179,7 @@ export default function CitizenLogin() {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                placeholder="123456"
+                placeholder="6-digit code"
                 required
                 className="w-full px-4 py-3 text-sm bg-white rounded-2xl border border-[#E2E8F0] outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-[#0F172A]"
               />
