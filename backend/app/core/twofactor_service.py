@@ -1,4 +1,4 @@
-import requests
+import httpx
 from app.core.logger import log
 from app.core.config import settings
 from typing import Optional, Tuple
@@ -25,7 +25,7 @@ def send_otp_2factor(phone_number: str) -> Tuple[bool, Optional[str]]:
     url = f"https://2factor.in/API/V1/{settings.TWOFACTOR_API_KEY}/SMS/{normalized_phone}/AUTOGEN/OTP1"
 
     try:
-        response = requests.get(url, timeout=10)
+        response = httpx.get(url, timeout=10.0)
         data = response.json()
 
         if data.get("Status") == "Success":
@@ -51,7 +51,7 @@ def verify_otp_2factor(session_id: str, otp: str) -> bool:
     url = f"https://2factor.in/API/V1/{settings.TWOFACTOR_API_KEY}/SMS/VERIFY/{session_id}/{otp}"
 
     try:
-        response = requests.get(url, timeout=10)
+        response = httpx.get(url, timeout=10.0)
         data = response.json()
 
         if data.get("Status") == "Success":
