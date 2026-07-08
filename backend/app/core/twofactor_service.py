@@ -22,7 +22,7 @@ def send_otp_2factor(phone_number: str) -> Tuple[bool, Optional[str]]:
         return False, None
 
     normalized_phone = normalize_phone_2factor(phone_number)
-    url = f"https://2factor.in/API/V1/{settings.TWOFACTOR_API_KEY}/SMS/{normalized_phone}/AUTOGEN"
+    url = f"https://2factor.in/API/V1/{settings.TWOFACTOR_API_KEY}/SMS/{normalized_phone}/AUTOGEN/OTP1"
 
     try:
         response = requests.get(url, timeout=10)

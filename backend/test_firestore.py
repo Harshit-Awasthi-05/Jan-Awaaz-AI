@@ -1,36 +1,18 @@
-"""
-Quick sanity check: confirms GOOGLE_APPLICATION_CREDENTIALS can write to
-and read from Firestore in the correct project.
-Run with: python test_firestore.py
-"""
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
+import firebase_admin
+from firebase_admin import credentials
 from google.cloud import firestore
+import json
 
-def main():
-    print(f"Using credentials from: {os.getenv('GOOGLE_APPLICATION_CREDENTIALS')}")
+cred = credentials.Certificate("d:/janawaazai/backend/service-account.json")
+firebase_admin.initialize_app(cred)
 
-    db = firestore.Client()
-    print(f"Connected to Firestore project: {db.project}")
+db = firestore.Client()
+query = db.collection("complaints").where("citizen_uid", "==", "test_uid").order_by("created_at", "DESCENDING")
 
-    # Write a test document
-    doc_ref = db.collection("_connection_test").document("ping")
-    doc_ref.set({"status": "ok", "message": "Firestore connection working"})
-    print("Write successful.")
-
-    # Read it back
-    doc = doc_ref.get()
-    if doc.exists:
-        print(f"Read back: {doc.to_dict()}")
-    else:
-        print("ERROR: Document not found after write.")
-
-    # Clean up
-    doc_ref.delete()
-    print("Test document cleaned up. Firestore is working correctly.")
-
-if __name__ == "__main__":
-    main()
+try:
+    results = [doc.to_dict() for doc in query.stream()]
+    print("SUCCESS")
+    print(results)
+except Exception as e:
+    print("ERROR:")
+    print(e)
