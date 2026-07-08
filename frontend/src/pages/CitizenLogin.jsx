@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "../firebase";
 import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -17,6 +18,21 @@ export default function CitizenLogin() {
   const [sessionId, setSessionId] = useState("");
   const navigate = useNavigate();
   const { language, toggleLanguage, t } = useLanguage();
+  const { citizenUser } = useAuth();
+
+  // Redirect if already logged in (fixes the race condition after OTP verify)
+  useEffect(() => {
+    if (citizenUser) {
+      navigate("/", { replace: true });
+    }
+  }, [citizenUser, navigate]);
+
+  const data = await res.json();
+  console.log("request-otp response:", data);
+  if (!res.ok) {
+    throw new Error(data.detail || "Failed to send OTP.");
+  }
+  setSessionId(data.session_id);
 
   const normalizePhone = (raw) => {
     const digitsOnly = raw.replace(/\D/g, "");
