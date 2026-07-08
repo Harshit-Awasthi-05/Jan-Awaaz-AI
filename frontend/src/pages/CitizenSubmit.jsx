@@ -17,7 +17,6 @@ import imageCompression from 'browser-image-compression';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
-// Fix for default Leaflet marker icon in React/Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -246,7 +245,6 @@ export default function CitizenSubmit() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handlePhotoSelect}
               className="hidden"
             />
