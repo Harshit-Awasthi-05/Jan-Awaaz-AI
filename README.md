@@ -66,11 +66,9 @@ analysis, grievance management, and constituency planning.
 ## Architecture Overview
 
 The platform is structured as a decoupled application with a React
-frontend and FastAPI backend. Firebase provides citizen identity and
-real-time operational data, BigQuery handles constituency-scale
+frontend and FastAPI backend. Cloud Firestore provides real-time operational data, BigQuery handles constituency-scale
 analytics, Gemini performs multimodal AI analysis, Cloudinary stores
-citizen-uploaded media, and Twilio enables OTP and WhatsApp
-communication.
+citizen-uploaded media, and WhatsApp integration handles grievance communication. OTP verification is handled separately through 2Factor.in without any SMS-call or voice-call flow in the application architecture.
 
 ``` mermaid
 graph TD
@@ -99,7 +97,7 @@ graph TD
     end
 
     subgraph "External Services"
-        Twilio["Twilio Verify + WhatsApp"]
+        WhatsApp["WhatsApp Business Integration"]
         Cloudinary["Cloudinary Media Storage"]
     end
 
@@ -112,8 +110,7 @@ graph TD
     API --> MPAPI
 
     AuthAPI --> TwoFactor
-    AuthAPI --> Twilio
-
+    
     Ingestion --> AI
     Ingestion --> Firestore
     Ingestion --> BQ
@@ -274,11 +271,11 @@ support.
                                                   analysis and generated
                                                   insights
 
-  Citizen Authentication  2Factor.in OTP          Passwordless phone OTP
+  Citizen Authentication  2Factor.in OTP          OTP-based verification
                                                   through FastAPI backend
 
-  MP Authentication       Firestore + PyJWT +     Hashed credentials + OTP
-                          bcrypt                  verification and JWT sessions
+  MP Authentication       Firestore + PyJWT +     Hashed credentials and
+                          bcrypt                  JWT sessions
 
   Database                Cloud Firestore         Live grievance,
                                                   citizen, and MP records
@@ -291,8 +288,8 @@ support.
                                                   storage and CDN
                                                   delivery
 
-  Messaging               Twilio                  MP Login MFA and WhatsApp
-                                                  Business integration
+  Messaging               WhatsApp                WhatsApp Business       Citizen grievance submission
+                                                  integration
 
   Deployment              Docker Compose, Nginx   Containerized
                                                   application deployment
@@ -312,8 +309,8 @@ support.
   BigQuery                            Analytical engine for
                                       development-priority scoring
 
-  Firebase Authentication             Citizen identity management and
-                                      custom-token authentication
+  Cloud Firestore                     Citizen profiles, grievances, and
+                                      operational application data
   -----------------------------------------------------------------------
 
 ## Logic Flows
@@ -376,7 +373,7 @@ sequenceDiagram
     Citizen->>FE: Enter phone number
     FE->>API: Request OTP
     API->>TwoFactor: Send OTP
-    TwoFactor-->>Citizen: Deliver SMS OTP
+    TwoFactor-->>API: Create OTP verification session
     Citizen->>FE: Enter OTP
     FE->>API: Verify OTP
     API->>TwoFactor: Validate OTP
@@ -435,7 +432,7 @@ sequenceDiagram
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/               # MP login and OTP verification
+│   │   │   ├── auth/               # MP login and JWT authentication
 │   │   │   ├── citizen/            # 2Factor.in citizen OTP auth and complaint listing
 │   │   │   ├── complaints/         # Complaint create/read services
 │   │   │   ├── ingestion/          # App uploads and WhatsApp webhook
@@ -446,7 +443,7 @@ sequenceDiagram
 │   │   │   ├── firebase.py         # Firebase authentication helpers
 │   │   │   ├── firestore_client.py # Firestore client singleton
 │   │   │   ├── security.py         # JWT, bcrypt, OTP, auth dependencies
-│   │   │   ├── twilio_service.py   # Twilio SMS and WhatsApp services
+│   │   │   ├── whatsapp_service.py   # WhatsApp integration services
 │   │   │   └── config.py           # Environment-based settings
 │   │   └── main.py                 # FastAPI application entry point
 │   ├── scripts/
@@ -656,7 +653,7 @@ Expected response:
 
 ``` bash
 curl -X POST http://127.0.0.1:8000/api/v1/ingestion/app-upload \
-  -H "Authorization: Bearer <FIREBASE_ID_TOKEN>" \
+  -H "Authorization: Bearer <CITIZEN_JWT>" \
   -F "file=@pothole.jpg" \
   -F "latitude=28.6139" \
   -F "longitude=77.2090" \
@@ -685,8 +682,8 @@ curl \
   `CLOUDINARY_CLOUD_NAME`            Cloudinary account identifier
   `CLOUDINARY_API_KEY`               Cloudinary API access
   `CLOUDINARY_API_SECRET`            Cloudinary secret
-  `TWILIO_ACCOUNT_SID`               Twilio account identifier
-  `TWILIO_AUTH_TOKEN`                Twilio authentication token
+  `WHATSAPP_ACCESS_TOKEN`               WhatsApp Business API access token
+  `WHATSAPP_PHONE_NUMBER_ID`                WhatsApp Business phone number identifier
   `TWO_FACTOR_API_KEY`                2Factor.in OTP API credential
 
 ### Frontend
@@ -698,7 +695,7 @@ curl \
 
 ## Security
 
--   Gemini credentials, Twilio credentials, Cloudinary secrets, JWT
+-   Gemini credentials, WhatsApp credentials, Cloudinary secrets, JWT
     secrets, and service-account files must remain backend-only.
 -   MP passwords are stored as bcrypt hashes and never as plaintext.
 -   MP API routes use JWT-based authentication.
@@ -742,7 +739,7 @@ Before production deployment:
 -   apply Firebase Security Rules;
 -   configure BigQuery dataset permissions;
 -   restrict service-account IAM roles;
--   configure Twilio webhook URLs;
+-   configure WhatsApp webhook URLs;
 -   set Cloudinary upload restrictions;
 -   enable logging and monitoring; and
 -   validate health checks for all services.
@@ -824,3 +821,476 @@ Potential extensions include:
 
 Built for the **Google AI Hackathon 2026 --- Track 1: People's
 Priorities**.
+
+---
+
+# Complete Working Application Structure
+
+The following structure represents the complete recommended working architecture of **Jan Awaaz AI**, including the React frontend, FastAPI backend, 2Factor.in OTP authentication, Firestore, Gemini AI, BigQuery analytics, Cloudinary media storage, WhatsApp integration, Docker, tests, and deployment configuration.
+
+```text
+Jan-Awaaz-AI/
+│
+├── README.md
+├── .gitignore
+├── docker-compose.yml
+├── nginx.conf
+│
+├── backend/
+│   ├── .env
+│   ├── .env.example
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── pytest.ini
+│   │
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   │
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── router.py
+│   │   │   │
+│   │   │   ├── auth/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── routes.py
+│   │   │   │   ├── schemas.py
+│   │   │   │   └── service.py
+│   │   │   │
+│   │   │   ├── citizen/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── routes.py
+│   │   │   │   ├── schemas.py
+│   │   │   │   └── service.py
+│   │   │   │
+│   │   │   ├── complaints/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── routes.py
+│   │   │   │   ├── schemas.py
+│   │   │   │   └── service.py
+│   │   │   │
+│   │   │   ├── ingestion/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── routes.py
+│   │   │   │   ├── schemas.py
+│   │   │   │   └── service.py
+│   │   │   │
+│   │   │   └── mp/
+│   │   │       ├── __init__.py
+│   │   │       ├── routes.py
+│   │   │       ├── schemas.py
+│   │   │       └── service.py
+│   │   │
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py
+│   │   │   ├── security.py
+│   │   │   ├── dependencies.py
+│   │   │   ├── exceptions.py
+│   │   │   ├── logging.py
+│   │   │   ├── twofactor_service.py
+│   │   │   ├── firebase.py
+│   │   │   ├── firestore_client.py
+│   │   │   ├── bigquery_client.py
+│   │   │   ├── ai_service.py
+│   │   │   ├── cloudinary_service.py
+│   │   │   └── whatsapp_service.py
+│   │   │
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── citizen.py
+│   │   │   ├── complaint.py
+│   │   │   └── mp.py
+│   │   │
+│   │   ├── repositories/
+│   │   │   ├── __init__.py
+│   │   │   ├── citizen_repository.py
+│   │   │   ├── complaint_repository.py
+│   │   │   └── mp_repository.py
+│   │   │
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_service.py
+│   │   │   ├── grievance_service.py
+│   │   │   ├── analytics_service.py
+│   │   │   ├── priority_service.py
+│   │   │   └── notification_service.py
+│   │   │
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── constants.py
+│   │       ├── validators.py
+│   │       ├── phone.py
+│   │       └── response.py
+│   │
+│   ├── scripts/
+│   │   ├── create_mp.py
+│   │   ├── seed_demo_data.py
+│   │   └── setup_bigquery.py
+│   │
+│   └── tests/
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_auth.py
+│       ├── test_citizen.py
+│       ├── test_complaints.py
+│       ├── test_ingestion.py
+│       └── test_mp_dashboard.py
+│
+├── frontend/
+│   ├── .env
+│   ├── .env.example
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   │
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   ├── logo.svg
+│   │   └── manifest.json
+│   │
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── index.css
+│       │
+│       ├── api/
+│       │   ├── client.js
+│       │   ├── authApi.js
+│       │   ├── citizenApi.js
+│       │   ├── complaintApi.js
+│       │   └── mpApi.js
+│       │
+│       ├── assets/
+│       │   ├── images/
+│       │   └── icons/
+│       │
+│       ├── components/
+│       │   ├── common/
+│       │   │   ├── Button.jsx
+│       │   │   ├── Input.jsx
+│       │   │   ├── Loader.jsx
+│       │   │   ├── Modal.jsx
+│       │   │   ├── StatusBadge.jsx
+│       │   │   └── ErrorBoundary.jsx
+│       │   │
+│       │   ├── citizen/
+│       │   │   ├── ComplaintCard.jsx
+│       │   │   ├── ComplaintDetailsModal.jsx
+│       │   │   ├── LanguageSelector.jsx
+│       │   │   ├── LocationPicker.jsx
+│       │   │   └── MobileBottomNav.jsx
+│       │   │
+│       │   └── admin/
+│       │       ├── AdminSidebar.jsx
+│       │       ├── AnalyticsChart.jsx
+│       │       ├── GrievanceTable.jsx
+│       │       ├── PriorityCard.jsx
+│       │       └── StatCard.jsx
+│       │
+│       ├── context/
+│       │   ├── AuthContext.jsx
+│       │   └── LanguageContext.jsx
+│       │
+│       ├── hooks/
+│       │   ├── useAuth.js
+│       │   ├── useGeolocation.js
+│       │   └── useLanguage.js
+│       │
+│       ├── layouts/
+│       │   ├── CitizenLayout.jsx
+│       │   └── AdminLayout.jsx
+│       │
+│       ├── pages/
+│       │   ├── citizen/
+│       │   │   ├── CitizenLogin.jsx
+│       │   │   ├── CitizenOTP.jsx
+│       │   │   ├── CitizenHome.jsx
+│       │   │   ├── CitizenSubmit.jsx
+│       │   │   ├── CitizenTrack.jsx
+│       │   │   ├── CitizenUpdates.jsx
+│       │   │   └── CitizenProfile.jsx
+│       │   │
+│       │   └── admin/
+│       │       ├── MPLogin.jsx
+│       │       ├── AdminDashboard.jsx
+│       │       ├── AdminGrievances.jsx
+│       │       ├── AdminConstituents.jsx
+│       │       ├── AdminAnalytics.jsx
+│       │       └── AdminSettings.jsx
+│       │
+│       ├── routes/
+│       │   ├── ProtectedRoute.jsx
+│       │   └── RoleRoute.jsx
+│       │
+│       └── utils/
+│           ├── constants.js
+│           ├── formatters.js
+│           ├── storage.js
+│           └── validators.js
+│
+├── infrastructure/
+│   ├── firestore/
+│   │   ├── firestore.rules
+│   │   └── firestore.indexes.json
+│   │
+│   ├── bigquery/
+│   │   ├── schema.sql
+│   │   ├── priority_query.sql
+│   │   └── seed_data.sql
+│   │
+│   └── nginx/
+│       └── default.conf
+│
+└── docs/
+    ├── architecture.md
+    ├── api.md
+    ├── deployment.md
+    └── screenshots/
+```
+
+## How the Complete Application Works
+
+### 1. Citizen Authentication
+
+```text
+Citizen
+   ↓
+React Login Page
+   ↓
+POST /api/v1/citizen/auth/send-otp
+   ↓
+FastAPI Backend
+   ↓
+2Factor.in OTP API
+   ↓
+OTP verification session created
+   ↓
+Citizen enters OTP
+   ↓
+POST /api/v1/citizen/auth/verify-otp
+   ↓
+FastAPI verifies OTP
+   ↓
+Citizen profile created or loaded from Firestore
+   ↓
+JWT access token returned
+   ↓
+Citizen enters protected application
+```
+
+### 2. Grievance Submission
+
+```text
+Citizen adds:
+Text + Image + GPS Location
+   ↓
+React CitizenSubmit page
+   ↓
+POST /api/v1/ingestion/app-upload
+   ↓
+JWT authentication check
+   ↓
+Image uploaded to Cloudinary
+   ↓
+Gemini analyzes text + image
+   ↓
+AI returns:
+Category
+Severity
+Summary
+Actionable Insight
+   ↓
+Complaint stored in Firestore
+   ↓
+Analytics row sent to BigQuery
+   ↓
+Complaint ID returned to citizen
+```
+
+### 3. Citizen Grievance Tracking
+
+```text
+Citizen Dashboard
+   ↓
+GET /api/v1/citizen/complaints
+   ↓
+FastAPI reads citizen UID from JWT
+   ↓
+Firestore returns citizen complaints
+   ↓
+React displays:
+Submitted
+In Progress
+Resolved
+   ↓
+Citizen opens complaint
+   ↓
+Details + Image + AI Analysis + Map displayed
+```
+
+### 4. MP Authentication
+
+```text
+MP enters email and password
+   ↓
+FastAPI verifies bcrypt password hash
+   ↓
+OTP challenge generated
+   ↓
+Backend issues MP JWT
+   ↓
+Protected Admin Dashboard opens
+```
+
+### 5. MP Dashboard
+
+```text
+MP Dashboard
+   ↓
+FastAPI Dashboard APIs
+   ↓
+Firestore → Live grievance records
+BigQuery → Priority analytics
+Gemini → Administrative insights
+   ↓
+Dashboard displays:
+Total grievances
+Pending cases
+Resolved cases
+Severity distribution
+Category distribution
+Weekly trends
+Constituent directory
+Priority development areas
+AI-generated insights
+```
+
+### 6. AI Priority Ranking
+
+```text
+Complaint Volume
+      +
+Severity Weight
+      +
+Geographic Concentration
+      +
+Demographic Need
+      +
+Infrastructure Gap
+      ↓
+BigQuery Analytical Model
+      ↓
+MP Priority Score
+      ↓
+Ranked Development Priorities
+      ↓
+MP Analytics Dashboard
+```
+
+## Required Backend Environment
+
+```env
+APP_NAME=Jan Awaaz AI
+APP_ENV=development
+DEBUG=true
+
+SECRET_KEY=replace_with_secure_random_secret
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+TWO_FACTOR_API_KEY=your_2factor_api_key
+
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+GCP_PROJECT_ID=your_google_cloud_project_id
+FIRESTORE_DATABASE_ID=(default)
+BIGQUERY_DATASET=jan_awaaz_ai
+
+GEMINI_API_KEY=your_gemini_api_key
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+WHATSAPP_ACCESS_TOKEN=your_whatsapp_access_token
+WHATSAPP_PHONE_NUMBER_ID=your_whatsapp_phone_number_id
+
+FRONTEND_URL=http://localhost:5173
+```
+
+## Required Frontend Environment
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+```
+
+## Core API Routes
+
+| Method | Route | Purpose |
+|---|---|---|
+| `POST` | `/api/v1/citizen/auth/send-otp` | Start citizen OTP verification |
+| `POST` | `/api/v1/citizen/auth/verify-otp` | Verify citizen OTP and issue JWT |
+| `GET` | `/api/v1/citizen/me` | Get logged-in citizen profile |
+| `GET` | `/api/v1/citizen/complaints` | Get citizen grievances |
+| `POST` | `/api/v1/ingestion/app-upload` | Submit app grievance |
+| `POST` | `/api/v1/ingestion/whatsapp-webhook` | Receive WhatsApp grievance |
+| `POST` | `/api/v1/auth/mp/login` | Verify MP credentials |
+| | `GET` | `/api/v1/mp/dashboard/overview` | Dashboard statistics |
+| `GET` | `/api/v1/mp/grievances` | List all grievances |
+| `GET` | `/api/v1/mp/grievances/{id}` | Get grievance details |
+| `PATCH` | `/api/v1/mp/grievances/{id}/status` | Update grievance status |
+| `GET` | `/api/v1/mp/constituents` | Get constituent directory |
+| `GET` | `/api/v1/mp/analytics` | Get analytics |
+| `GET` | `/api/v1/mp/priorities` | Get ranked priorities |
+
+## Local Startup Order
+
+```text
+1. Configure backend/.env
+2. Add Firebase/GCP service-account JSON
+3. Start FastAPI backend
+4. Verify backend health endpoint
+5. Configure frontend/.env
+6. Start React frontend
+7. Test 2Factor.in citizen OTP
+8. Create an MP account with scripts/create_mp.py
+9. Test MP login and JWT session
+10. Submit a grievance
+11. Verify Firestore record
+12. Verify Cloudinary image
+13. Verify Gemini analysis
+14. Open MP dashboard
+15. Verify BigQuery priority analytics
+```
+
+### Start Backend
+
+```bash
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+### Start Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Production Startup
+
+```bash
+docker-compose up --build -d
+```
+
+With this structure, the application has a clear separation between frontend presentation, backend APIs, business services, external integrations, data repositories, analytics infrastructure, testing, and deployment.
+
