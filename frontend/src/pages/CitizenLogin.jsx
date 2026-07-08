@@ -7,6 +7,16 @@ import { useAuth } from "../context/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
+// Helper to safely turn FastAPI error responses (string OR array of objects) into a readable message
+const parseErrorDetail = (detail, fallback) => {
+  if (!detail) return fallback;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((d) => d.msg || JSON.stringify(d)).join(", ");
+  }
+  return fallback;
+};
+
 export default function CitizenLogin() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [name, setName] = useState("");
@@ -26,13 +36,6 @@ export default function CitizenLogin() {
       navigate("/", { replace: true });
     }
   }, [citizenUser, navigate]);
-
-  const data = await res.json();
-  console.log("request-otp response:", data);
-  if (!res.ok) {
-    throw new Error(data.detail || "Failed to send OTP.");
-  }
-  setSessionId(data.session_id);
 
   const normalizePhone = (raw) => {
     const digitsOnly = raw.replace(/\D/g, "");
@@ -61,7 +64,11 @@ export default function CitizenLogin() {
       
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to send OTP.");
+        throw new Error(parseErrorDetail(data.detail, "Failed to send OTP."));
+      }
+
+      if (!data.session_id) {
+        throw new Error("Server did not return a session ID. Please try again.");
       }
       
       setSessionId(data.session_id);
@@ -99,7 +106,7 @@ export default function CitizenLogin() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || "Invalid OTP.");
+        throw new Error(parseErrorDetail(data.detail, "Invalid OTP."));
       }
 
       await signInWithCustomToken(auth, data.custom_token);
