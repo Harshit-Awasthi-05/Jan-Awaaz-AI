@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     TWILIO_VERIFY_SERVICE_SID: str
     TWILIO_WHATSAPP_NUMBER: str = "+14155238886"  # Twilio sandbox default
 
+    TWOFACTOR_API_KEY: str = ""
+
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("ALLOWED_HOSTS", mode="before")

@@ -11,8 +11,44 @@ from app.api.complaints.services import get_complaints_by_citizen
 router = APIRouter(prefix="/citizen", tags=["Citizen Reporting"])
 
 
+from app.core.twofactor_service import send_otp_2factor, verify_otp_2factor
+
+class RequestOTPRequest(BaseModel):
+    phone_number: str
+
+class VerifyOTPRequest(BaseModel):
+    phone_number: str
+    session_id: str
+    otp: str
+    name: Optional[str] = None
+
 class SyncProfileRequest(BaseModel):
     name: str
+
+@router.post("/request-otp")
+def request_otp(payload: RequestOTPRequest):
+    success, session_id = send_otp_2factor(payload.phone_number)
+    if not success or not session_id:
+        raise HTTPException(status_code=500, detail="Failed to send OTP.")
+    return {"status": "success", "message": "OTP sent", "session_id": session_id}
+
+@router.post("/verify-otp")
+def verify_otp(payload: VerifyOTPRequest):
+    success = verify_otp_2factor(payload.session_id, payload.otp)
+    if not success:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
+    
+    # Use Firebase to manage identity
+    citizen_uid = get_or_create_citizen_uid(payload.phone_number)
+    
+    if payload.name:
+        try:
+            firebase_auth.update_user(citizen_uid, display_name=payload.name)
+        except Exception:
+            pass
+            
+    custom_token = firebase_auth.create_custom_token(citizen_uid).decode("utf-8")
+    return {"status": "success", "custom_token": custom_token, "citizen_uid": citizen_uid}
 
 @router.post("/sync-profile")
 async def sync_citizen_profile(
