@@ -50,7 +50,7 @@ analysis, grievance management, and constituency planning.
 
 1.  **Collect** citizen grievances through a mobile-first web
     application and WhatsApp Business integration.
-2.  **Authenticate** citizens natively using Firebase Phone Authentication without
+2.  **Authenticate** citizens natively using 2Factor.in OTP verification without
     requiring email accounts or passwords.
 3.  **Analyze** text and images with Gemini 2.5 Flash to extract
     category, severity, summary, and actionable insight.
@@ -93,7 +93,7 @@ graph TD
     end
 
     subgraph "Google Cloud Platform"
-        FirebaseAuth["Firebase Authentication"]
+        TwoFactor["2Factor.in OTP API"]
         Firestore["Cloud Firestore"]
         BQ["BigQuery"]
     end
@@ -111,7 +111,7 @@ graph TD
     API --> Ingestion
     API --> MPAPI
 
-    AuthAPI --> FirebaseAuth
+    AuthAPI --> TwoFactor
     AuthAPI --> Twilio
 
     Ingestion --> AI
@@ -193,7 +193,7 @@ sends an automatic confirmation.
 
 ### Native Phone-Based Authentication
 
-Citizens authenticate using a phone number and OTP natively through Firebase Phone Authentication. The flow runs directly on the frontend, removing the need for email accounts and passwords, making the platform fast and accessible for rural and low-literacy users.
+Citizens authenticate using a phone number and OTP through 2Factor.in. The React frontend sends the phone number and OTP to the FastAPI backend, which securely communicates with the 2Factor.in API. This removes the need for email accounts and passwords, making the platform fast and accessible for rural and low-literacy users.
 
 ### Real-Time MP Dashboard
 
@@ -274,11 +274,11 @@ support.
                                                   analysis and generated
                                                   insights
 
-  Citizen Authentication  Firebase Phone Auth     Native passwordless phone
-                                                  OTP directly on frontend
+  Citizen Authentication  2Factor.in OTP          Passwordless phone OTP
+                                                  through FastAPI backend
 
-  MP Authentication       Firestore + PyJWT +     Hashed credentials + Twilio
-                          bcrypt                  MFA and JWT sessions
+  MP Authentication       Firestore + PyJWT +     Hashed credentials + OTP
+                          bcrypt                  verification and JWT sessions
 
   Database                Cloud Firestore         Live grievance,
                                                   citizen, and MP records
@@ -369,20 +369,19 @@ sequenceDiagram
     autonumber
     actor Citizen
     participant FE as React Frontend
-    participant Firebase as Firebase Auth
+    participant API as FastAPI Backend
+    participant TwoFactor as 2Factor.in OTP API
     participant API as FastAPI Backend
 
     Citizen->>FE: Enter phone number
-    FE->>Firebase: signInWithPhoneNumber()
-    Firebase-->>Citizen: Deliver SMS OTP
+    FE->>API: Request OTP
+    API->>TwoFactor: Send OTP
+    TwoFactor-->>Citizen: Deliver SMS OTP
     Citizen->>FE: Enter OTP
-    FE->>Firebase: confirm(otp)
-    Firebase-->>FE: Return authenticated session (ID Token)
-    
-    opt If First Time Signup
-        FE->>API: POST /citizen/sync-profile (with Token)
-        API->>Firebase: Update user profile (name)
-    end
+    FE->>API: Verify OTP
+    API->>TwoFactor: Validate OTP
+    TwoFactor-->>API: Verification result
+    API-->>FE: Return authenticated JWT session
 ```
 
 ### MP Priority Ranking
@@ -436,8 +435,8 @@ sequenceDiagram
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/               # MP login and Twilio OTP verification
-│   │   │   ├── citizen/            # Citizen OTP auth and complaint listing
+│   │   │   ├── auth/               # MP login and OTP verification
+│   │   │   ├── citizen/            # 2Factor.in citizen OTP auth and complaint listing
 │   │   │   ├── complaints/         # Complaint create/read services
 │   │   │   ├── ingestion/          # App uploads and WhatsApp webhook
 │   │   │   └── mp/                 # MP dashboard and priority APIs
@@ -483,11 +482,11 @@ Ensure the following are available:
 -   Python 3.11 or newer
 -   Node.js 18 or newer
 -   Docker and Docker Compose
--   Firebase project with Authentication and Firestore enabled
+-   Firebase project with Firestore enabled
 -   Google Cloud project with BigQuery enabled
 -   Gemini API key
 -   Cloudinary account
--   Twilio account with a Verify service
+-   2Factor.in account with OTP API access
 -   WhatsApp Business configuration if WhatsApp submission is enabled
 
 ### Quick Start with Docker
@@ -611,7 +610,7 @@ cp .env.example .env
 Configure:
 
 -   `VITE_API_BASE_URL`
--   Firebase Web SDK settings
+-   Frontend application settings
 
 Start the development server:
 
@@ -688,7 +687,7 @@ curl \
   `CLOUDINARY_API_SECRET`            Cloudinary secret
   `TWILIO_ACCOUNT_SID`               Twilio account identifier
   `TWILIO_AUTH_TOKEN`                Twilio authentication token
-  `TWILIO_VERIFY_SERVICE_SID`        Twilio Verify service identifier
+  `TWO_FACTOR_API_KEY`                2Factor.in OTP API credential
 
 ### Frontend
 
@@ -699,12 +698,11 @@ curl \
 
 ## Security
 
--   Firebase Web API keys are safely exposed to the frontend as they are required for native Firebase Phone Auth. Access must be restricted via Firebase Security Rules and domain whitelisting.
 -   Gemini credentials, Twilio credentials, Cloudinary secrets, JWT
     secrets, and service-account files must remain backend-only.
 -   MP passwords are stored as bcrypt hashes and never as plaintext.
 -   MP API routes use JWT-based authentication.
--   Citizen requests use Firebase identity tokens.
+-   Citizen authentication is verified through the backend using 2Factor.in OTP, followed by JWT-based sessions.
 -   Sensitive environment files and service-account credentials must be
     included in `.gitignore`.
 -   Production deployments should restrict CORS origins to trusted
