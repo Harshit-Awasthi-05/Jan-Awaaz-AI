@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, ChevronRight } from 'lucide-react';
 import StatusChip from '../components/StatusChip';
+import GrievanceModal from '../components/GrievanceModal';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
@@ -8,7 +9,7 @@ const FILTERS = ['All', 'Submitted', 'In Progress', 'Resolved'];
 
 function formatDate(isoString) {
   if (!isoString) return '';
-  return new Date(isoString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  return new Date(isoString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 
@@ -25,6 +26,7 @@ export default function CitizenTrack() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [selectedGrievance, setSelectedGrievance] = useState(null);
 
   useEffect(() => {
     if (!citizenToken) return;
@@ -112,6 +114,21 @@ export default function CitizenTrack() {
           {filtered.map((g) => (
             <div
               key={g.complaint_id}
+              onClick={() => setSelectedGrievance({
+                id: g.complaint_id,
+                citizen: 'You',
+                channel: g.channel,
+                status: toChipStatus(g.status),
+                priority: g.severity || 'Medium',
+                category: g.category || 'Uncategorized',
+                date: formatDate(g.created_at),
+                subject: g.summary,
+                action_insight: g.action_insight,
+                latitude: g.latitude,
+                longitude: g.longitude,
+                media_url: g.media_url,
+                constituency: g.constituency
+              })}
               className="bg-white rounded-2xl p-4 shadow-card hover:shadow-dropdown transition-shadow active:scale-[0.99] cursor-pointer animate-fade-in-up"
             >
               <div className="flex items-start justify-between">
@@ -134,6 +151,14 @@ export default function CitizenTrack() {
             </div>
           ))}
         </div>
+      )}
+
+      {selectedGrievance && (
+        <GrievanceModal
+          grievance={selectedGrievance}
+          onClose={() => setSelectedGrievance(null)}
+          onStatusChange={null} // Citizens cannot change status
+        />
       )}
     </div>
   );

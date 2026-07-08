@@ -71,20 +71,33 @@ export default function GrievanceModal({ grievance, onClose, onStatusChange }) {
                   <MapPin className="w-4 h-4 text-[#10B981]" />
                   Location Details
                 </h4>
-                <div className="bg-[#F0FDF4] p-4 rounded-xl border border-[#DCFCE7] text-[#166534] text-sm">
+                <div className="bg-[#F0FDF4] p-4 rounded-xl border border-[#DCFCE7] text-[#166534] text-sm flex flex-col gap-3">
                   {grievance.constituency && <p><strong>Constituency:</strong> {grievance.constituency}</p>}
                   {grievance.latitude && grievance.longitude && (
-                    <p>
-                      <strong>Coordinates:</strong> {grievance.latitude}, {grievance.longitude}{' '}
-                      <a
-                        href={`https://maps.google.com/?q=${grievance.latitude},${grievance.longitude}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[#2563EB] hover:underline ml-2"
-                      >
-                        (View on Map)
-                      </a>
-                    </p>
+                    <>
+                      <p>
+                        <strong>Coordinates:</strong> {grievance.latitude}, {grievance.longitude}{' '}
+                        <a
+                          href={`https://maps.google.com/?q=${grievance.latitude},${grievance.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#2563EB] hover:underline ml-2"
+                        >
+                          (View on Google Maps)
+                        </a>
+                      </p>
+                      <div className="rounded-lg overflow-hidden border border-[#DCFCE7]">
+                        <iframe
+                          width="100%"
+                          height="200"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          allowFullScreen
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://maps.google.com/maps?q=${grievance.latitude},${grievance.longitude}&hl=en&z=14&output=embed`}
+                        ></iframe>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -110,18 +123,20 @@ export default function GrievanceModal({ grievance, onClose, onStatusChange }) {
 
         </div>
 
-        <div className="px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
-          <span className="text-sm font-medium text-[#475569]">Update Status:</span>
-          <select
-            value={grievance.status}
-            onChange={(e) => onStatusChange && onStatusChange(grievance.id, e.target.value)}
-            className="text-sm font-medium text-[#0F172A] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#2563EB]/30 cursor-pointer shadow-sm"
-          >
-            <option value="submitted">Submitted</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-          </select>
-        </div>
+        {onStatusChange && (
+          <div className="px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
+            <span className="text-sm font-medium text-[#475569]">Update Status:</span>
+            <select
+              value={grievance.status}
+              onChange={(e) => onStatusChange(grievance.id, e.target.value)}
+              className="text-sm font-medium text-[#0F172A] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#2563EB]/30 cursor-pointer shadow-sm"
+            >
+              <option value="submitted">Submitted</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+        )}
 
       </div>
     </div>
