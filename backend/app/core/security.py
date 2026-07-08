@@ -77,15 +77,9 @@ def check_otp(email: str, submitted_otp: str) -> bool:
 
 def send_citizen_otp(phone_number: str) -> bool:
     try:
-        verification = (
-            _twilio_client.verify.v2
-            .services(settings.TWILIO_VERIFY_SERVICE_SID)
-            .verifications.create(to=phone_number, channel="sms")
-        )
-        log.info(
-            f"Twilio OTP dispatched to {phone_number}, status={verification.status}"
-        )
-        return verification.status == "pending"
+        # Bypassed Twilio for easy demo login
+        log.info(f"Mock OTP dispatched to {phone_number} (Use 123456 to login)")
+        return True
     except Exception as e:
         log.error(f"Twilio OTP send failed for {phone_number}: {e}")
         return False
@@ -93,15 +87,9 @@ def send_citizen_otp(phone_number: str) -> bool:
 
 def verify_citizen_otp(phone_number: str, code: str) -> bool:
     try:
-        check = (
-            _twilio_client.verify.v2
-            .services(settings.TWILIO_VERIFY_SERVICE_SID)
-            .verification_checks.create(to=phone_number, code=code)
-        )
-        approved = check.status == "approved"
-        log.info(
-            f"Twilio OTP verify for {phone_number}: status={check.status}"
-        )
+        # Bypassed Twilio for easy demo login
+        approved = (code == "123456")
+        log.info(f"Mock OTP verify for {phone_number}: approved={approved}")
         return approved
     except Exception as e:
         log.error(f"Twilio OTP verify failed for {phone_number}: {e}")
