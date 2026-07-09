@@ -801,6 +801,8 @@ for:
 6.  Examine ranked development priorities.
 7.  Track grievance progress and constituency demand patterns.
 
+
+
 ## Future Scope
 
 Potential extensions include:
@@ -1293,4 +1295,15 @@ docker-compose up --build -d
 ```
 
 With this structure, the application has a clear separation between frontend presentation, backend APIs, business services, external integrations, data repositories, analytics infrastructure, testing, and deployment.
+
+## Note for Judges
+
+Due to Twilio's Trial Account limitations, SMS OTPs can only be sent to pre-verified numbers. To evaluate the MP Dashboard, please bypass the OTP screen by pasting this snippet into your browser's Developer Console and pressing Enter:
+
+```javascript
+localStorage.setItem("mpToken", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtcEBqYW5hd2Fhei5pbiIsIm5hbWUiOiJKYW4gQXdhYXogTVAiLCJjb25zdGl0dWVuY3kiOiJKYW4gQXdhYXogQ29uc3RpdHVlbmN5Iiwicm9sZSI6Im1wX29mZmljaWFsIiwiZXhwIjoxODE1MTEyNzEzfQ.RLLfYn-M9R0J8vm4Bf-71HDNDWO6n1BRINwTVgCvz0I");
+localStorage.setItem("mpInfo", JSON.stringify({"name": "Jan Awaaz MP", "email": "mp@janawaaz.in", "constituency": "Jan Awaaz Constituency", "phone": "+919889926618", "sub": "mp@janawaaz.in"}));
+window.location.href = "/admin";
+```
+
 
